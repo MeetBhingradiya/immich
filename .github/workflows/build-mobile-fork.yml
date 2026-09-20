@@ -23,6 +23,11 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
@@ -42,12 +47,33 @@ jobs:
         
       - name: Install dependencies
         run: |
-          # The repo tasks use mise, we can just run the tasks!
-          # Wait, in the main repo they do: "mise //mobile:install:ci" and "mise //mobile:codegen"
           mise run //mobile:install:ci
           mise run //mobile:codegen
 
-      - name: Build Android APK (Unsigned)
+      - name: Prepare Signing Keystore
+        run: |
+          if [ -n "${{ secrets.KEY_JKS }}" ]; then
+            echo "Using repository secret KEY_JKS..."
+            printf "%s" "${{ secrets.KEY_JKS }}" | base64 -d > mobile/android/key.jks
+            echo "ALIAS=${{ secrets.ALIAS || 'immich' }}" >> $GITHUB_ENV
+            echo "ANDROID_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD || 'immichpassword' }}" >> $GITHUB_ENV
+            echo "ANDROID_STORE_PASSWORD=${{ secrets.ANDROID_STORE_PASSWORD || 'immichpassword' }}" >> $GITHUB_ENV
+          else
+            echo "Generating self-signed release keystore..."
+            keytool -genkey -v -keystore mobile/android/key.jks \
+              -alias immich \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass immichpassword \
+              -keypass immichpassword \
+              -dname "CN=Immich, OU=Immich, O=Immich, L=City, S=State, C=US"
+            echo "ALIAS=immich" >> $GITHUB_ENV
+            echo "ANDROID_KEY_PASSWORD=immichpassword" >> $GITHUB_ENV
+            echo "ANDROID_STORE_PASSWORD=immichpassword" >> $GITHUB_ENV
+          fi
+
+      - name: Build and Sign Android Release APK
         working-directory: ./mobile
         run: |
           mise exec -- flutter build apk --release
