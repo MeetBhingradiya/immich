@@ -217,6 +217,9 @@ class _BottomNavigationBarState extends ConsumerState<_BottomNavigationBar> {
                 ),
                 child: NavigationBarTheme(
                   data: NavigationBarThemeData(
+                    indicatorShape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                    ),
                     iconTheme: WidgetStateProperty.resolveWith((states) {
                       if (states.contains(WidgetState.selected)) {
                         return const IconThemeData(size: 28);
