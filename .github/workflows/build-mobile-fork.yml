@@ -11,7 +11,7 @@ jobs:
     name: Build Android APK
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     
     steps:
       - name: Checkout code
@@ -50,14 +50,14 @@ jobs:
           mise run //mobile:install:ci
           mise run //mobile:codegen
 
-      - name: Prepare Signing Keystore
+      - name: Prepare Signing Keystore & Properties
         run: |
           if [ -n "${{ secrets.KEY_JKS }}" ]; then
             echo "Using repository secret KEY_JKS..."
             printf "%s" "${{ secrets.KEY_JKS }}" | base64 -d > mobile/android/key.jks
-            echo "ALIAS=${{ secrets.ALIAS || 'immich' }}" >> $GITHUB_ENV
-            echo "ANDROID_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD || 'immichpassword' }}" >> $GITHUB_ENV
-            echo "ANDROID_STORE_PASSWORD=${{ secrets.ANDROID_STORE_PASSWORD || 'immichpassword' }}" >> $GITHUB_ENV
+            STORE_PASS="${{ secrets.ANDROID_STORE_PASSWORD || 'immichpassword' }}"
+            KEY_PASS="${{ secrets.ANDROID_KEY_PASSWORD || 'immichpassword' }}"
+            ALIAS_NAME="${{ secrets.ALIAS || 'immich' }}"
           else
             echo "Generating self-signed release keystore..."
             keytool -genkey -v -keystore mobile/android/key.jks \
@@ -68,18 +68,73 @@ jobs:
               -storepass immichpassword \
               -keypass immichpassword \
               -dname "CN=Immich, OU=Immich, O=Immich, L=City, S=State, C=US"
-            echo "ALIAS=immich" >> $GITHUB_ENV
-            echo "ANDROID_KEY_PASSWORD=immichpassword" >> $GITHUB_ENV
-            echo "ANDROID_STORE_PASSWORD=immichpassword" >> $GITHUB_ENV
+            STORE_PASS="immichpassword"
+            KEY_PASS="immichpassword"
+            ALIAS_NAME="immich"
           fi
 
-      - name: Build and Sign Android Release APK
+          echo "ALIAS=$ALIAS_NAME" >> $GITHUB_ENV
+          echo "ANDROID_KEY_PASSWORD=$KEY_PASS" >> $GITHUB_ENV
+          echo "ANDROID_STORE_PASSWORD=$STORE_PASS" >> $GITHUB_ENV
+
+          # Write key.properties for Gradle
+          printf "storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=../key.jks\n" "$STORE_PASS" "$KEY_PASS" "$ALIAS_NAME" > mobile/android/key.properties
+
+      - name: Build Android Release APKs
         working-directory: ./mobile
         run: |
           mise exec -- flutter build apk --release
+          mise exec -- flutter build apk --release --split-per-abi
+
+      - name: Sign and Verify APKs with apksigner (v1, v2, v3)
+        run: |
+          APKSIGNER=$(find $ANDROID_HOME/build-tools/ -name apksigner | sort -V | tail -n 1)
+          ZIPALIGN=$(find $ANDROID_HOME/build-tools/ -name zipalign | sort -V | tail -n 1)
+          echo "Using apksigner: $APKSIGNER"
+          echo "Using zipalign: $ZIPALIGN"
+
+          for apk in mobile/build/app/outputs/flutter-apk/*.apk; do
+            echo "----------------------------------------"
+            echo "Processing $apk ..."
+            $APKSIGNER sign --ks mobile/android/key.jks \
+              --ks-key-alias "${ALIAS}" \
+              --ks-pass "pass:${ANDROID_STORE_PASSWORD}" \
+              --key-pass "pass:${ANDROID_KEY_PASSWORD}" \
+              --v1-signing-enabled true \
+              --v2-signing-enabled true \
+              --v3-signing-enabled true \
+              "$apk"
+
+            echo "Verifying $apk ..."
+            $APKSIGNER verify --verbose "$apk"
+          done
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: immich-release-apk
           path: mobile/build/app/outputs/flutter-apk/*.apk
+
+      - name: Publish Direct APK to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/mobile-networking-fix'
+        with:
+          tag_name: mobile-latest
+          name: "Immich Mobile Signed Build (Liquid Glass & Networking Fix)"
+          body: |
+            ### 📱 Immich Mobile Custom Signed Build
+            Download the raw `.apk` directly to your phone (no .zip extraction required!):
+            - **[app-arm64-v8a-release.apk]**: Best for all modern Android phones
+            - **[app-release.apk]**: Universal fat APK (contains all CPU architectures)
+
+            ### ✨ What's included:
+            - **Networking Fix**: Local network fallback when Location is denied or turned off.
+            - **External URLs**: Allows saving HTTP / unverified / VPN URLs without forced validation wipe.
+            - **Liquid Glass Theme**: Apple-style frosted glass bottom navigation bar, blurred app bar, and translucent cards.
+            - **Guaranteed Signing**: Fully signed and verified with v1, v2, and v3 Android signatures via `apksigner`.
+
+            ⚠️ **CRITICAL NOTE**: If you currently have the official Immich app installed on your phone, **you must uninstall it first** before installing this build. Android security blocks installing an APK with a different signature over an existing app.
+          files: |
+            mobile/build/app/outputs/flutter-apk/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
