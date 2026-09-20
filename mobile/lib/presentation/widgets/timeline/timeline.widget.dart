@@ -158,6 +158,10 @@ class _SliverTimelineState extends ConsumerState<_SliverTimeline> with WidgetsBi
   double _baseScaleFactor = 3.0;
   int? _restoreAssetIndex;
 
+  double _activePinchScale = 1.0;
+  bool _isPinching = false;
+  Offset _pinchFocalPoint = Offset.zero;
+
   final Debouncer _fastScrollDebouncer = Debouncer(interval: const Duration(milliseconds: 100));
 
   @override
@@ -495,6 +499,15 @@ class _SliverTimelineState extends ConsumerState<_SliverTimeline> with WidgetsBi
                   timeline = grid;
                 }
 
+                Widget scaledTimeline = timeline;
+                if (_isPinching) {
+                  scaledTimeline = Transform.scale(
+                    scale: math.max(0.7, math.min(2.2, _activePinchScale)),
+                    alignment: Alignment.center,
+                    child: timeline,
+                  );
+                }
+
                 return RawGestureDetector(
                   gestures: {
                     CustomScaleGestureRecognizer: GestureRecognizerFactoryWithHandlers<CustomScaleGestureRecognizer>(
@@ -502,22 +515,34 @@ class _SliverTimelineState extends ConsumerState<_SliverTimeline> with WidgetsBi
                       (CustomScaleGestureRecognizer scale) {
                         scale.onStart = (details) {
                           _baseScaleFactor = _scaleFactor;
+                          setState(() {
+                            _isPinching = true;
+                            _activePinchScale = 1.0;
+                            _pinchFocalPoint = details.localFocalPoint;
+                          });
                         };
 
                         scale.onUpdate = (details) {
-                          final newScaleFactor = math.max(math.min(5.0, _baseScaleFactor * details.scale), 1.0);
-                          final newPerRow = 7 - newScaleFactor.toInt();
+                          setState(() {
+                            _activePinchScale = details.scale;
+                            _pinchFocalPoint = details.localFocalPoint;
+                          });
+                        };
 
-                          if (newPerRow != _perRow) {
-                            final targetAssetIndex = _getCurrentAssetIndex(segments);
-                            setState(() {
-                              _scaleFactor = newScaleFactor;
-                              _perRow = newPerRow;
-                              _restoreAssetIndex = targetAssetIndex;
-                            });
+                        scale.onEnd = (details) {
+                          final newScaleFactor = math.max(math.min(6.0, _baseScaleFactor * _activePinchScale), 1.0);
+                          final newPerRow = math.max(1, math.min(6, 7 - newScaleFactor.round()));
 
-                            unawaited(ref.read(settingsProvider).write(.timelineTilesPerRow, _perRow));
-                          }
+                          final targetAssetIndex = _getCurrentAssetIndex(segments);
+                          setState(() {
+                            _isPinching = false;
+                            _activePinchScale = 1.0;
+                            _scaleFactor = newScaleFactor;
+                            _perRow = newPerRow;
+                            _restoreAssetIndex = targetAssetIndex;
+                          });
+
+                          unawaited(ref.read(settingsProvider).write(SettingsKey.timelineTilesPerRow, _perRow));
                         };
                       },
                     ),
@@ -536,7 +561,7 @@ class _SliverTimelineState extends ConsumerState<_SliverTimeline> with WidgetsBi
                       children: [
                         NotificationListener<ScrollNotification>(
                           onNotification: _onScrollVelocityNotification,
-                          child: timeline,
+                          child: scaledTimeline,
                         ),
                         if (isBottomWidgetVisible)
                           Positioned(

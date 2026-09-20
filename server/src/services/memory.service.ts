@@ -10,7 +10,7 @@ import { BaseService } from 'src/services/base.service';
 import { addAssets, removeAssets } from 'src/utils/asset.util';
 import { findOrFail } from 'src/utils/misc';
 
-const DAYS = 3;
+const DAYS = 14;
 
 @Injectable()
 export class MemoryService extends BaseService {

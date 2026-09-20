@@ -11,7 +11,7 @@ class MemoryService {
   MemoryService(this._repository);
 
   Future<List<Memory>> getMemoryLane(String ownerId) {
-    return _repository.getAll(ownerId);
+    return _repository.getAll(ownerId, onlyToday: false);
   }
 
   Future<List<Memory>> getAll(String ownerId, {bool onlyFavorites = false}) {
