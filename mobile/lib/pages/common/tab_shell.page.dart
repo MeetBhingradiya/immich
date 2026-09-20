@@ -215,14 +215,26 @@ class _BottomNavigationBarState extends ConsumerState<_BottomNavigationBar> {
                     width: 1.2,
                   ),
                 ),
-                child: NavigationBar(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  height: 64,
-                  indicatorColor: context.primaryColor.withValues(alpha: 0.22),
-                  selectedIndex: widget.tabsRouter.activeIndex,
-                  onDestinationSelected: (index) => _onNavigationSelected(widget.tabsRouter, index, ref),
-                  destinations: widget.destinations,
+                child: NavigationBarTheme(
+                  data: NavigationBarThemeData(
+                    iconTheme: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return const IconThemeData(size: 28);
+                      }
+                      return const IconThemeData(size: 26);
+                    }),
+                  ),
+                  child: NavigationBar(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    height: 64,
+                    animationDuration: const Duration(milliseconds: 500),
+                    labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+                    indicatorColor: context.primaryColor.withValues(alpha: 0.22),
+                    selectedIndex: widget.tabsRouter.activeIndex,
+                    onDestinationSelected: (index) => _onNavigationSelected(widget.tabsRouter, index, ref),
+                    destinations: widget.destinations,
+                  ),
                 ),
               ),
             ),
