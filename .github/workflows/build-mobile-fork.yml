@@ -1,0 +1,59 @@
+name: Build Mobile Fork
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.local/share/mise
+          key: ${{ runner.os }}-build-mobile-fork
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+        with:
+          install_args: --yes
+          
+      - name: Install tools & flutter
+        run: mise install
+        
+      - name: Install dependencies
+        run: |
+          # The repo tasks use mise, we can just run the tasks!
+          # Wait, in the main repo they do: "mise //mobile:install:ci" and "mise //mobile:codegen"
+          mise run //mobile:install:ci
+          mise run //mobile:codegen
+
+      - name: Build Android APK (Unsigned)
+        working-directory: ./mobile
+        run: |
+          mise exec -- flutter build apk --release
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: immich-release-apk
+          path: mobile/build/app/outputs/flutter-apk/*.apk
