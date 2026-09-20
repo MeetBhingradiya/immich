@@ -25,7 +25,7 @@ class ExternalNetworkPreference extends HookConsumerWidget {
       canSave.value = entries.value.every((e) => e.status == AuxCheckStatus.valid);
 
       final urls = entries.value
-          .where((e) => e.status == AuxCheckStatus.valid && e.url.isNotEmpty)
+          .where((e) => e.url.isNotEmpty)
           .map((e) => e.url)
           .toList();
 
