@@ -500,14 +500,11 @@ class _SliverTimelineState extends ConsumerState<_SliverTimeline> with WidgetsBi
                   timeline = grid;
                 }
 
-                Widget scaledTimeline = timeline;
-                if (_isPinching) {
-                  scaledTimeline = Transform.scale(
-                    scale: math.max(0.7, math.min(2.2, _activePinchScale)),
-                    alignment: Alignment.center,
-                    child: timeline,
-                  );
-                }
+                Widget scaledTimeline = Transform.scale(
+                  scale: _isPinching ? math.max(0.7, math.min(2.2, _activePinchScale)) : 1.0,
+                  alignment: Alignment.center,
+                  child: timeline,
+                );
 
                 return RawGestureDetector(
                   gestures: {
@@ -516,34 +513,41 @@ class _SliverTimelineState extends ConsumerState<_SliverTimeline> with WidgetsBi
                       (CustomScaleGestureRecognizer scale) {
                         scale.onStart = (details) {
                           _baseScaleFactor = _scaleFactor;
-                          setState(() {
-                            _isPinching = true;
-                            _activePinchScale = 1.0;
-                            _pinchFocalPoint = details.localFocalPoint;
-                          });
+                          if (details.pointerCount > 1) {
+                            setState(() {
+                              _isPinching = true;
+                              _activePinchScale = 1.0;
+                              _pinchFocalPoint = details.localFocalPoint;
+                            });
+                          }
                         };
 
                         scale.onUpdate = (details) {
-                          setState(() {
-                            _activePinchScale = details.scale;
-                            _pinchFocalPoint = details.localFocalPoint;
-                          });
+                          if (details.pointerCount > 1) {
+                            setState(() {
+                              _isPinching = true;
+                              _activePinchScale = details.scale;
+                              _pinchFocalPoint = details.localFocalPoint;
+                            });
+                          }
                         };
 
                         scale.onEnd = (details) {
-                          final newScaleFactor = math.max(math.min(6.0, _baseScaleFactor * _activePinchScale), 1.0);
-                          final newPerRow = math.max(1, math.min(6, 7 - newScaleFactor.round()));
+                          if (_isPinching) {
+                            final newScaleFactor = math.max(math.min(6.0, _baseScaleFactor * _activePinchScale), 1.0);
+                            final newPerRow = math.max(1, math.min(6, 7 - newScaleFactor.round()));
 
-                          final targetAssetIndex = _getCurrentAssetIndex(segments);
-                          setState(() {
-                            _isPinching = false;
-                            _activePinchScale = 1.0;
-                            _scaleFactor = newScaleFactor;
-                            _perRow = newPerRow;
-                            _restoreAssetIndex = targetAssetIndex;
-                          });
+                            final targetAssetIndex = _getCurrentAssetIndex(segments);
+                            setState(() {
+                              _isPinching = false;
+                              _activePinchScale = 1.0;
+                              _scaleFactor = newScaleFactor;
+                              _perRow = newPerRow;
+                              _restoreAssetIndex = targetAssetIndex;
+                            });
 
-                          unawaited(ref.read(settingsProvider).write(SettingsKey.timelineTilesPerRow, _perRow));
+                            unawaited(ref.read(settingsProvider).write(SettingsKey.timelineTilesPerRow, _perRow));
+                          }
                         };
                       },
                     ),
