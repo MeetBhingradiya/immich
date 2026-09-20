@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
@@ -86,6 +87,7 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
           canPop: tabsRouter.activeIndex == 0,
           onPopInvokedWithResult: (didPop, _) => !didPop ? tabsRouter.setActiveIndex(0) : null,
           child: Scaffold(
+            extendBody: true,
             resizeToAvoidBottomInset: false,
             body: isScreenLandscape
                 ? Row(
@@ -178,10 +180,35 @@ class _BottomNavigationBarState extends ConsumerState<_BottomNavigationBar> {
       return const SizedBox.shrink();
     }
 
-    return NavigationBar(
-      selectedIndex: widget.tabsRouter.activeIndex,
-      onDestinationSelected: (index) => _onNavigationSelected(widget.tabsRouter, index, ref),
-      destinations: widget.destinations,
+    final isDark = context.isDarkTheme;
+
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.60)
+                : Colors.white.withValues(alpha: 0.70),
+            border: Border(
+              top: BorderSide(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.12)
+                    : Colors.black.withValues(alpha: 0.08),
+                width: 0.8,
+              ),
+            ),
+          ),
+          child: NavigationBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            indicatorColor: context.primaryColor.withValues(alpha: 0.22),
+            selectedIndex: widget.tabsRouter.activeIndex,
+            onDestinationSelected: (index) => _onNavigationSelected(widget.tabsRouter, index, ref),
+            destinations: widget.destinations,
+          ),
+        ),
+      ),
     );
   }
 }

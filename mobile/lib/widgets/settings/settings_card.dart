@@ -23,8 +23,18 @@ class SettingsCard extends StatelessWidget {
       child: Card(
         elevation: 0,
         clipBehavior: Clip.antiAlias,
-        color: context.colorScheme.surfaceContainer,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+        color: context.isDarkTheme
+            ? Colors.white.withValues(alpha: 0.06)
+            : Colors.black.withValues(alpha: 0.03),
+        shape: RoundedRectangleBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
+          side: BorderSide(
+            color: context.isDarkTheme
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.06),
+            width: 1,
+          ),
+        ),
         margin: const EdgeInsets.symmetric(vertical: 4.0),
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/foundation.dart';
@@ -54,15 +55,33 @@ class ImmichSliverAppBar extends ConsumerWidget {
         duration: Durations.medium1,
         opacity: isMultiSelectEnabled ? 0 : 1,
         sliver: SliverAppBar(
-          backgroundColor: context.colorScheme.surface,
-          surfaceTintColor: context.colorScheme.surfaceTint,
+          backgroundColor: context.isDarkTheme
+              ? Colors.black.withValues(alpha: 0.65)
+              : Colors.white.withValues(alpha: 0.75),
+          surfaceTintColor: Colors.transparent,
+          flexibleSpace: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: context.isDarkTheme
+                          ? Colors.white.withValues(alpha: 0.10)
+                          : Colors.black.withValues(alpha: 0.06),
+                      width: 0.6,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
           elevation: 0,
-          scrolledUnderElevation: 1.0,
+          scrolledUnderElevation: 0.0,
           floating: floating,
           pinned: pinned,
           snap: snap,
           expandedHeight: expandedHeight,
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(5))),
           automaticallyImplyLeading: false,
           centerTitle: false,
           title: title ?? const _ImmichLogoWithText(),
