@@ -182,30 +182,50 @@ class _BottomNavigationBarState extends ConsumerState<_BottomNavigationBar> {
 
     final isDark = context.isDarkTheme;
 
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
         child: Container(
           decoration: BoxDecoration(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.60)
-                : Colors.white.withValues(alpha: 0.70),
-            border: Border(
-              top: BorderSide(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.12)
-                    : Colors.black.withValues(alpha: 0.08),
-                width: 0.8,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(32),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+              child: Container(
+                height: 64,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(32),
+                  color: isDark
+                      ? Colors.black.withValues(alpha: 0.65)
+                      : Colors.white.withValues(alpha: 0.78),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.15)
+                        : Colors.white.withValues(alpha: 0.70),
+                    width: 1.2,
+                  ),
+                ),
+                child: NavigationBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  height: 64,
+                  indicatorColor: context.primaryColor.withValues(alpha: 0.22),
+                  selectedIndex: widget.tabsRouter.activeIndex,
+                  onDestinationSelected: (index) => _onNavigationSelected(widget.tabsRouter, index, ref),
+                  destinations: widget.destinations,
+                ),
               ),
             ),
-          ),
-          child: NavigationBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            indicatorColor: context.primaryColor.withValues(alpha: 0.22),
-            selectedIndex: widget.tabsRouter.activeIndex,
-            onDestinationSelected: (index) => _onNavigationSelected(widget.tabsRouter, index, ref),
-            destinations: widget.destinations,
           ),
         ),
       ),

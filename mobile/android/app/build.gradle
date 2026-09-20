@@ -68,8 +68,11 @@ android {
       signingConfig hasKeystore ? signingConfigs.release : signingConfigs.debug
       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
-      applicationIdSuffix ".custom"
-      versionNameSuffix "-CUSTOM"
+      def prNumber = System.getenv("PR_NUMBER")
+      if (prNumber) {
+        applicationIdSuffix ".pr${prNumber}"
+        versionNameSuffix "-pr${prNumber}"
+      }
     }
   }
   namespace 'app.alextran.immich'
