@@ -170,6 +170,11 @@ const AdminConfigSchemaWithVisibility = z
             keepLastAmount: z.int().min(1).describe('Keep last amount'),
           })
           .meta({ id: 'AdminConfigDatabaseBackupDto' }),
+        upload: z
+          .object({
+            maxAgeHours: z.int().min(1).describe('Max age in hours'),
+          })
+          .meta({ id: 'AdminConfigUploadBackupDto' }),
       })
       .meta({ id: 'AdminConfigBackupsDto' }),
     ffmpeg: AdminConfigFFmpegSchema,
@@ -400,6 +405,7 @@ const AdminConfigSchemaWithVisibility = z
         clusterNewFaces: configBool.describe('Cluster new faces'),
         generateMemories: configBool.describe('Generate memories'),
         syncQuotaUsage: configBool.describe('Sync quota usage'),
+        removeStaleUploads: configBool.describe('Remove stale uploads'),
       })
       .meta({ id: 'AdminConfigNightlyTasksDto' }),
     trash: z
@@ -589,6 +595,9 @@ export const defaults = Object.freeze<SystemConfig>({
       cronExpression: CronExpression.EVERY_DAY_AT_2AM,
       keepLastAmount: 14,
     },
+    upload: {
+      maxAgeHours: 72,
+    },
   },
   ffmpeg: {
     crf: 23,
@@ -769,6 +778,7 @@ export const defaults = Object.freeze<SystemConfig>({
     syncQuotaUsage: true,
     missingThumbnails: true,
     clusterNewFaces: true,
+    removeStaleUploads: true,
   },
   trash: {
     enabled: true,
