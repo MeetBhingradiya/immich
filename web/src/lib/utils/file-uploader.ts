@@ -147,6 +147,86 @@ type FileUploaderParams = {
   deviceAssetId: string;
 };
 
+const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB (Bypasses Cloudflare 100MB body limit)
+
+async function uploadInChunks(
+  file: File,
+  checksum: string,
+  deviceAssetId: string,
+  fileCreatedAt: string,
+  onProgress: (loaded: number, total: number) => void
+): Promise<{ id: string; status: AssetMediaStatus }> {
+  const total = file.size;
+  const fileModifiedAt = new Date(file.lastModified).toISOString();
+  const assetData = `device-asset-id="${deviceAssetId}", device-id="web", filename="${encodeURIComponent(file.name)}", file-created-at="${fileCreatedAt}", file-modified-at="${fileModifiedAt}"`;
+  const reprDigest = `sha=:${checksum}:`;
+
+  const firstChunkSize = Math.min(CHUNK_SIZE, total);
+  const firstChunk = file.slice(0, firstChunkSize);
+  const isSingle = firstChunkSize >= total;
+
+  const authHeaders: Record<string, string> = authManager.token
+    ? { Authorization: `Bearer ${authManager.token}` }
+    : {};
+
+  // 1. Initiate session with first chunk: POST /upload
+  const startRes = await fetch(`${getBaseUrl()}/upload`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'Content-Length': String(firstChunk.size),
+      'Repr-Digest': reprDigest,
+      'Upload-Draft-Interop-Version': '8',
+      'Upload-Complete': isSingle ? '?1' : '?0',
+      'X-Immich-Asset-Data': assetData,
+      ...authHeaders,
+    },
+    body: firstChunk,
+  });
+
+  if (!startRes.ok) {
+    throw new Error(`Chunked upload init failed (${startRes.status}): ${await startRes.text()}`);
+  }
+
+  const startData = (await startRes.json()) as { id: string };
+  const assetId = startData.id;
+  let offset = firstChunk.size;
+  onProgress(offset, total);
+
+  if (isSingle) {
+    return { id: assetId, status: AssetMediaStatus.Created };
+  }
+
+  // 2. Upload remaining chunks: PATCH /upload/:id
+  while (offset < total) {
+    const nextChunkSize = Math.min(CHUNK_SIZE, total - offset);
+    const chunk = file.slice(offset, offset + nextChunkSize);
+    const isLast = offset + nextChunkSize >= total;
+
+    const patchRes = await fetch(`${getBaseUrl()}/upload/${assetId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': String(chunk.size),
+        'Upload-Offset': String(offset),
+        'Upload-Draft-Interop-Version': '8',
+        'Upload-Complete': isLast ? '?1' : '?0',
+        ...authHeaders,
+      },
+      body: chunk,
+    });
+
+    if (!patchRes.ok) {
+      throw new Error(`Chunk upload failed at offset ${offset} (${patchRes.status}): ${await patchRes.text()}`);
+    }
+
+    offset += chunk.size;
+    onProgress(offset, total);
+  }
+
+  return { id: assetId, status: AssetMediaStatus.Created };
+}
+
 // TODO: should probably use the @api SDK
 async function fileUploader({
   assetFile,
@@ -201,17 +281,30 @@ async function fileUploader({
       const queryParams = asQueryString(authManager.params);
 
       uploadAssetsStore.updateItem(deviceAssetId, { message: $t('asset_uploading') });
-      const response = await uploadRequest<AssetMediaResponseDto>({
-        url: getBaseUrl() + '/assets' + (queryParams ? `?${queryParams}` : ''),
-        data: formData,
-        onUploadProgress: (event) => uploadAssetsStore.updateProgress(deviceAssetId, event.loaded, event.total),
-      });
 
-      if (![200, 201].includes(response.status)) {
-        throw new Error($t('errors.unable_to_upload_file'));
+      if (assetFile.size > CHUNK_SIZE && !authManager.isSharedLink) {
+        // Automatically slice media > 50 MB into 50 MB chunks to pass Cloudflare Tunnel with zero 413 errors!
+        const checksum = await hashFile(assetFile);
+        responseData = await uploadInChunks(
+          assetFile,
+          checksum,
+          deviceAssetId,
+          fileCreatedAt,
+          (loaded, total) => uploadAssetsStore.updateProgress(deviceAssetId, loaded, total)
+        );
+      } else {
+        const response = await uploadRequest<AssetMediaResponseDto>({
+          url: getBaseUrl() + '/assets' + (queryParams ? `?${queryParams}` : ''),
+          data: formData,
+          onUploadProgress: (event) => uploadAssetsStore.updateProgress(deviceAssetId, event.loaded, event.total),
+        });
+
+        if (![200, 201].includes(response.status)) {
+          throw new Error($t('errors.unable_to_upload_file'));
+        }
+
+        responseData = response.data;
       }
-
-      responseData = response.data;
     }
 
     if (responseData.status === AssetMediaStatus.Duplicate) {
