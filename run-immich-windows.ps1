@@ -296,12 +296,18 @@ if (!$raw -or $raw.Trim() -ne "1") {
     $raw = & $PsqlExe -h 127.0.0.1 -p $DbPort -U postgres -d postgres -t -c "SELECT 1;" 2>$null
     if ($raw -and $raw.Trim() -eq "1") {
         # Create DbUser role if it doesn't exist
-        & $PsqlExe -h 127.0.0.1 -p $DbPort -U postgres -d postgres -c "DO `$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '$DbUser') THEN CREATE ROLE $DbUser WITH SUPERUSER LOGIN PASSWORD '$DbPass'; END IF; END `$\$;" 2>$null
+        $hasUser = & $PsqlExe -h 127.0.0.1 -p $DbPort -U postgres -d postgres -t -c "SELECT 1 FROM pg_roles WHERE rolname='$DbUser';" 2>$null
+        if (!$hasUser -or $hasUser.Trim() -ne "1") {
+            & $PsqlExe -h 127.0.0.1 -p $DbPort -U postgres -d postgres -c "CREATE ROLE $DbUser WITH SUPERUSER LOGIN PASSWORD '$DbPass';" 2>$null
+        }
     }
 }
 
 # Ensure postgres superuser role exists for tooling/pgAdmin compatibility
-& $PsqlExe -h 127.0.0.1 -p $DbPort -U $DbUser -d $DbName -c "DO `$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'postgres') THEN CREATE ROLE postgres WITH SUPERUSER LOGIN PASSWORD '$DbPass'; END IF; END `$\$;" 2>$null
+$hasPg = & $PsqlExe -h 127.0.0.1 -p $DbPort -U $DbUser -d $DbName -t -c "SELECT 1 FROM pg_roles WHERE rolname='postgres';" 2>$null
+if (!$hasPg -or $hasPg.Trim() -ne "1") {
+    & $PsqlExe -h 127.0.0.1 -p $DbPort -U $DbUser -d $DbName -c "CREATE ROLE postgres WITH SUPERUSER LOGIN PASSWORD '$DbPass';" 2>$null
+}
 
 # Verify database exists
 $dbExists = & $PsqlExe -h 127.0.0.1 -p $DbPort -U $DbUser -d $DbName -t -c "SELECT 1 FROM pg_database WHERE datname='$DbName';" 2>$null
@@ -327,8 +333,13 @@ try {
         Write-Host "Starting Immich Server via Node.js (dist/main.js)..." -ForegroundColor Green
         node --env-file=.env dist\main.js
     } else {
-        Write-Host "Starting Immich Server via Bun..." -ForegroundColor Green
-        bun run --env-file=.env dist\main.js
+        Write-Host "Starting Immich Server via Bun (dist/main.js)..." -ForegroundColor Green
+        $bunCmd = (Get-Command bun -ErrorAction SilentlyContinue)?.Source
+        if (!$bunCmd -and (Test-Path "$env:USERPROFILE\.bun\bin\bun.exe")) {
+            $bunCmd = "$env:USERPROFILE\.bun\bin\bun.exe"
+        }
+        if (!$bunCmd) { $bunCmd = "bun" }
+        & $bunCmd --env-file=.env dist\main.js
     }
 } finally {
     Write-Host "`nShutting down native services..." -ForegroundColor Red
