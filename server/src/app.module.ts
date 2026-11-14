@@ -50,7 +50,7 @@ const common = [...repositories, ...services, GlobalExceptionFilter];
 
 const commonMiddleware = [
   { provide: APP_FILTER, useClass: GlobalExceptionFilter },
-  { provide: APP_PIPE, useClass: GlobalValidationPipe },
+  { provide: APP_PIPE, useValue: new GlobalValidationPipe() },
   { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
   { provide: APP_INTERCEPTOR, useClass: ErrorInterceptor },
 ];

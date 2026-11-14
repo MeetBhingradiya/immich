@@ -228,7 +228,7 @@ const getEnv = (): EnvData => {
 
   const environment = dto.IMMICH_ENV || ImmichEnvironment.Production;
   const isProd = environment === ImmichEnvironment.Production;
-  const buildFolder = dto.IMMICH_BUILD_DATA || '/build';
+  const buildFolder = dto.IMMICH_BUILD_DATA || (process.platform === 'win32' ? join(process.cwd(), 'stack', 'build') : '/build');
   const folders = {
     geodata: join(buildFolder, 'geodata'),
     web: join(buildFolder, 'www'),

@@ -1,5 +1,6 @@
-import { BadRequestException, StandardSchemaValidationPipe } from '@nestjs/common';
+import { BadRequestException, Injectable, StandardSchemaValidationPipe } from '@nestjs/common';
 
+@Injectable()
 export class GlobalValidationPipe extends StandardSchemaValidationPipe {
   constructor() {
     super({ validateCustomDecorators: true, exceptionFactory: toValidationException });

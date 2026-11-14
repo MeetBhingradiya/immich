@@ -6,6 +6,7 @@ import { FileMigrationProvider, Migrator } from 'kysely/migration';
 import { InjectKysely } from 'nestjs-kysely';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { diff } from 'semver';
 import z from 'zod';
 import {
@@ -532,7 +533,7 @@ export class DatabaseRepository {
       provider: new FileMigrationProvider({
         fs: { readdir },
         path: { join },
-        import: (filePath) => import(filePath),
+        import: (filePath) => import(pathToFileURL(filePath).href),
         migrationFolder: join(import.meta.dirname, '..', 'schema/migrations'),
       }),
     });

@@ -1,5 +1,5 @@
 **/node_modules/**
-
+stack
 .DS_Store
 .vscode/*
 !.vscode/launch.json

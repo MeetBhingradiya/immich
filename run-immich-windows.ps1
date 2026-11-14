@@ -36,18 +36,20 @@ if (!(Test-Path $UploadDir)) { New-Item -ItemType Directory -Path $UploadDir -Fo
 # 2. Check Prerequisites (Bun, Python, Node)
 Write-Host "[1/5] Checking System Prerequisites..." -ForegroundColor Yellow
 
-$BunPath = (Get-Command bun -ErrorAction SilentlyContinue)?.Source
-if (!$BunPath) {
+$BunCmd = Get-Command bun -ErrorAction SilentlyContinue
+if (!$BunCmd) {
     Write-Error "Bun is not installed or not in PATH. Install Bun via: powershell -c ""irm bun.sh/install.ps1 | iex"""
     exit 1
 }
+$BunPath = $BunCmd.Source
 Write-Host "  ✓ Bun found: $BunPath" -ForegroundColor Green
 
-$PythonPath = (Get-Command python -ErrorAction SilentlyContinue)?.Source
-if (!$PythonPath) {
+$PythonCmd = Get-Command python -ErrorAction SilentlyContinue
+if (!$PythonCmd) {
     Write-Error "Python 3 is required for Machine Learning. Please install Python 3.11+."
     exit 1
 }
+$PythonPath = $PythonCmd.Source
 Write-Host "  ✓ Python found: $PythonPath" -ForegroundColor Green
 
 # 3. Setup Portable Redis if not present
@@ -82,6 +84,23 @@ if (!(Test-Path $InitDbExe)) {
     Write-Host "  ✓ PostgreSQL extracted to $PgsqlDir" -ForegroundColor Green
 }
 
+# Ensure pgvector is installed
+$VectorDll = Join-Path $PgsqlDir "lib\vector.dll"
+if (!(Test-Path $VectorDll)) {
+    Write-Host "  Downloading pgvector extension for Windows..." -ForegroundColor Cyan
+    $VectorZip = Join-Path $StackDir "pgvector.zip"
+    $VectorUrl = "https://github.com/czkwg8/pgvector-windows-binary/releases/download/v0.8.7/pgvector-v0.8.7-pg15-windows-x64.zip"
+    Invoke-WebRequest -Uri $VectorUrl -OutFile $VectorZip -UseBasicParsing
+    Expand-Archive -Path $VectorZip -DestinationPath $PgsqlDir -Force
+    Remove-Item $VectorZip -Force
+    
+    $ExtDir = Join-Path $PgsqlDir "share\extension"
+    if (!(Test-Path $ExtDir)) { New-Item -ItemType Directory -Path $ExtDir -Force | Out-Null }
+    Copy-Item (Join-Path $PgsqlDir "lib\vector*.sql") $ExtDir -Force -ErrorAction SilentlyContinue
+    Copy-Item (Join-Path $PgsqlDir "lib\vector.control") $ExtDir -Force -ErrorAction SilentlyContinue
+    Write-Host "  ✓ pgvector extension installed." -ForegroundColor Green
+}
+
 # Initialize Postgres cluster if not exists
 if (!(Test-Path (Join-Path $PgDataDir "PG_VERSION"))) {
     Write-Host "  Initializing new PostgreSQL database cluster..." -ForegroundColor Cyan
@@ -91,6 +110,19 @@ if (!(Test-Path (Join-Path $PgDataDir "PG_VERSION"))) {
 
 # 5. Configure Server Environment (.env)
 Write-Host "[4/5] Preparing Immich Environment Variables..." -ForegroundColor Yellow
+$BuildDir = Join-Path $StackDir "build"
+$GeodataDir = Join-Path $BuildDir "geodata"
+$WwwDir = Join-Path $BuildDir "www"
+if (!(Test-Path $GeodataDir)) { New-Item -ItemType Directory -Path $GeodataDir -Force | Out-Null }
+if (!(Test-Path $WwwDir)) { New-Item -ItemType Directory -Path $WwwDir -Force | Out-Null }
+$DateFile = Join-Path $GeodataDir "geodata-date.txt"
+if (!(Test-Path $DateFile)) { Set-Content -Path $DateFile -Value "2026-11-14" -Encoding UTF8 }
+
+$WebBuild = Join-Path $ScriptDir "web\build"
+if ((Test-Path (Join-Path $WebBuild "index.html")) -and !(Test-Path (Join-Path $WwwDir "index.html"))) {
+    Copy-Item -Path "$WebBuild\*" -Destination $WwwDir -Recurse -Force
+}
+
 $EnvPath = Join-Path $ScriptDir "server\.env"
 $EnvContent = @"
 NODE_ENV=production
@@ -107,6 +139,7 @@ UPLOAD_LOCATION=$UploadDir
 IMMICH_MACHINE_LEARNING_URL=http://127.0.0.1:$MlPort
 IMMICH_CHUNK_SIZE_MB=50
 IMMICH_ALLOW_REVERSE_PROXY=true
+IMMICH_BUILD_DATA=$BuildDir
 "@
 
 Set-Content -Path $EnvPath -Value $EnvContent -Encoding UTF8
@@ -126,6 +159,10 @@ if (!(Test-Path $ServerDist)) {
 # 6. Service Launchers
 Write-Host "[5/5] Launching Native Services..." -ForegroundColor Yellow
 
+# Clean up any dangling processes from previous runs
+Get-Process redis-server, postgres -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+Start-Sleep -Milliseconds 500
+
 # Start Redis
 $RedisProcess = Start-Process -FilePath $RedisExe -ArgumentList "--port $RedisPort --daemonize no" -PassThru -NoNewWindow
 Write-Host "  ✓ Redis started on port $RedisPort (PID: $($RedisProcess.Id))" -ForegroundColor Green
@@ -136,10 +173,14 @@ Start-Sleep -Seconds 2
 
 # Ensure database 'immich' exists
 $PsqlExe = Join-Path $PgsqlDir "bin\psql.exe"
-& $PsqlExe -U postgres -p $DbPort -c "SELECT 1 FROM pg_database WHERE datname='immich'" | Out-Null
-if ($LASTEXITCODE -ne 0) {
-    & $PsqlExe -U postgres -p $DbPort -c "CREATE DATABASE immich;"
+$CreatedbExe = Join-Path $PgsqlDir "bin\createdb.exe"
+$raw = & $PsqlExe -h 127.0.0.1 -p $DbPort -U postgres -d postgres -t -c "SELECT 1 FROM pg_database WHERE datname='immich';" 2>$null
+$exists = if ($raw) { $raw.Trim() } else { "" }
+if ($exists -ne "1") {
+    & $CreatedbExe -h 127.0.0.1 -p $DbPort -U postgres immich 2>$null
     Write-Host "  ✓ Created database 'immich'" -ForegroundColor Green
+} else {
+    Write-Host "  ✓ Database 'immich' verified." -ForegroundColor Green
 }
 
 Write-Host "==========================================================" -ForegroundColor Cyan
@@ -150,17 +191,15 @@ Write-Host "  Storage Vault: $UploadDir" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "Press Ctrl+C to cleanly shut down all services." -ForegroundColor Yellow
 
-# Start Immich Server using Bun
+# Start Immich Server
 try {
     Set-Location (Join-Path $ScriptDir "server")
-    if (Test-Path $ServerDist) {
-        Write-Host "Starting Immich Server via Bun (dist/main.js)..." -ForegroundColor Green
-        bun run dist\main.js
-    } elseif (Get-Command pnpm -ErrorAction SilentlyContinue) {
-        Write-Host "Starting Immich Server via pnpm..." -ForegroundColor Green
-        pnpm run start
+    if (Get-Command node -ErrorAction SilentlyContinue) {
+        Write-Host "Starting Immich Server via Node.js (dist/main.js)..." -ForegroundColor Green
+        node --env-file=.env dist\main.js
     } else {
-        bun run start
+        Write-Host "Starting Immich Server via Bun..." -ForegroundColor Green
+        bun run --env-file=.env dist\main.js
     }
 } finally {
     Write-Host "`nShutting down native services..." -ForegroundColor Red

@@ -58,6 +58,10 @@ export class MapRepository {
   async init(): Promise<void> {
     this.logger.log('Initializing metadata repository');
     const { resourcePaths } = this.configRepository.getEnv();
+    if (!existsSync(resourcePaths.geodata.dateFile)) {
+      this.logger.warn(`Geodata date file ${resourcePaths.geodata.dateFile} not found, skipping geodata import.`);
+      return;
+    }
     const geodataDate = await readFile(resourcePaths.geodata.dateFile, 'utf8');
 
     // TODO move to service init
@@ -66,14 +70,18 @@ export class MapRepository {
       return;
     }
 
-    await Promise.all([this.importGeodata(), this.importNaturalEarthCountries()]);
+    try {
+      await Promise.all([this.importGeodata(), this.importNaturalEarthCountries()]);
 
-    await this.metadataRepository.set(SystemMetadataKey.ReverseGeocodingState, {
-      lastUpdate: geodataDate,
-      lastImportFileName: citiesFile,
-    });
+      await this.metadataRepository.set(SystemMetadataKey.ReverseGeocodingState, {
+        lastUpdate: geodataDate,
+        lastImportFileName: citiesFile,
+      });
 
-    this.logger.log('Geodata import completed');
+      this.logger.log('Geodata import completed');
+    } catch (error: any) {
+      this.logger.warn(`Geodata import skipped or failed: ${error.message}`);
+    }
   }
 
   @GenerateSql({ params: [DummyValue.UUID] })
@@ -227,7 +235,8 @@ export class MapRepository {
     const { resourcePaths } = this.configRepository.getEnv();
     const filePath = resourcePaths.geodata.countryInfo;
     if (!existsSync(filePath)) {
-      throw new Error(`Geodata file ${filePath} not found`);
+      this.logger.warn(`Geodata file ${filePath} not found`);
+      return { byAlpha2, byAlpha3 };
     }
 
     const lineReader = readLine.createInterface({ input: createReadStream(filePath) });
