@@ -112,6 +112,17 @@ IMMICH_ALLOW_REVERSE_PROXY=true
 Set-Content -Path $EnvPath -Value $EnvContent -Encoding UTF8
 Write-Host "  ✓ Generated $EnvPath (50MB chunking enabled)" -ForegroundColor Green
 
+# 5. Build Server if not already built
+$ServerDist = Join-Path $ScriptDir "server\dist\main.js"
+if (!(Test-Path $ServerDist)) {
+    Write-Host "  Building Immich Server production bundle..." -ForegroundColor Cyan
+    if (Get-Command pnpm -ErrorAction SilentlyContinue) {
+        pnpm --filter immich build
+    } else {
+        bun --cwd (Join-Path $ScriptDir "server") run build
+    }
+}
+
 # 6. Service Launchers
 Write-Host "[5/5] Launching Native Services..." -ForegroundColor Yellow
 
@@ -142,7 +153,15 @@ Write-Host "Press Ctrl+C to cleanly shut down all services." -ForegroundColor Ye
 # Start Immich Server using Bun
 try {
     Set-Location (Join-Path $ScriptDir "server")
-    bun run start
+    if (Test-Path $ServerDist) {
+        Write-Host "Starting Immich Server via Bun (dist/main.js)..." -ForegroundColor Green
+        bun run dist\main.js
+    } elseif (Get-Command pnpm -ErrorAction SilentlyContinue) {
+        Write-Host "Starting Immich Server via pnpm..." -ForegroundColor Green
+        pnpm run start
+    } else {
+        bun run start
+    }
 } finally {
     Write-Host "`nShutting down native services..." -ForegroundColor Red
     if ($RedisProcess -and !$RedisProcess.HasExited) {
