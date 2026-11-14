@@ -205,6 +205,18 @@ IMMICH_BUILD_DATA=$BuildDir
 Set-Content -Path $EnvPath -Value $EnvContent -Encoding UTF8
 Write-Host "  ✓ Generated $EnvPath (50MB chunking enabled)" -ForegroundColor Green
 
+# Ensure workspace dependencies are installed
+$NodeModules = Join-Path $ScriptDir "node_modules"
+if (!(Test-Path $NodeModules)) {
+    Write-Host "  Installing monorepo dependencies via pnpm..." -ForegroundColor Cyan
+    Set-Location $ScriptDir
+    if (Get-Command pnpm -ErrorAction SilentlyContinue) {
+        pnpm install
+    } else {
+        bun install
+    }
+}
+
 # 5. Build Server if not already built
 $ServerDist = Join-Path $ScriptDir "server\dist\main.js"
 if (!(Test-Path $ServerDist)) {
