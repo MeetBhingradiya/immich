@@ -147,6 +147,17 @@ if (Test-Path $PidFile) {
     Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
 }
 
+# Patch Linux-specific postgresql.conf settings if ported from Linux/Docker
+$PgConf = Join-Path $PgDataDir "postgresql.conf"
+if (Test-Path $PgConf) {
+    $confContent = Get-Content $PgConf -Raw
+    if ($confContent -match 'dynamic_shared_memory_type\s*=\s*posix') {
+        $confContent = $confContent -replace 'dynamic_shared_memory_type\s*=\s*posix', 'dynamic_shared_memory_type = windows'
+        Set-Content -Path $PgConf -Value $confContent -Encoding UTF8
+        Write-Host "  ✓ Patched dynamic_shared_memory_type to 'windows' in postgresql.conf" -ForegroundColor Green
+    }
+}
+
 # Initialize Postgres cluster if not exists
 if (!(Test-Path (Join-Path $PgDataDir "PG_VERSION"))) {
     Write-Host "  Initializing new PostgreSQL database cluster..." -ForegroundColor Cyan
