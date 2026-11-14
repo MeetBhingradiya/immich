@@ -237,25 +237,13 @@ IMMICH_BUILD_DATA=$BuildDir
 Set-Content -Path $EnvPath -Value $EnvContent -Encoding UTF8
 Write-Host "  ✓ Generated $EnvPath (50MB chunking enabled)" -ForegroundColor Green
 
-# Ensure workspace dependencies are installed
+# Ensure workspace dependencies are installed via Bun
 $NodeModules = Join-Path $ScriptDir "node_modules"
-$ServerNodeModules = Join-Path $ScriptDir "server\node_modules\@immich\plugin-sdk"
-if (!(Test-Path $NodeModules) -or !(Test-Path $ServerNodeModules)) {
-    Write-Host "  Installing monorepo dependencies via pnpm..." -ForegroundColor Cyan
+$ServerPluginSdk = Join-Path $ScriptDir "server\node_modules\@immich\plugin-sdk\dist\index.js"
+if (!(Test-Path $NodeModules) -or !(Test-Path $ServerPluginSdk)) {
+    Write-Host "  Installing monorepo dependencies via Bun..." -ForegroundColor Cyan
     Set-Location $ScriptDir
-    $PnpmPath = ""
-    if (Test-Path "G:\immich\pnpm.exe") {
-        $PnpmPath = "G:\immich\pnpm.exe"
-    } elseif (Test-Path (Join-Path $StackDir "pnpm.exe")) {
-        $PnpmPath = Join-Path $StackDir "pnpm.exe"
-    } elseif (Get-Command pnpm -ErrorAction SilentlyContinue) {
-        $PnpmPath = (Get-Command pnpm).Source
-    } else {
-        $PnpmPath = Join-Path $StackDir "pnpm.exe"
-        Write-Host "  Downloading official standalone pnpm v9.15.4..." -ForegroundColor Cyan
-        Invoke-WebRequest -Uri "https://github.com/pnpm/pnpm/releases/download/v9.15.4/pnpm-win-x64.exe" -OutFile $PnpmPath -UseBasicParsing
-    }
-    & $PnpmPath install
+    bun install
 }
 
 # 5. Build Server if not already built

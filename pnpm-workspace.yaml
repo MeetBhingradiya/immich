@@ -1,13 +1,7 @@
 packages:
-  - packages/**
-  - docs
-  - e2e
-  - i18n
-  - server
-  - plugins
-  - web
-  - .github
   - packages/*
+  - server
+  - web
 allowBuilds:
   '@nestjs/core': false
   '@parcel/watcher': false

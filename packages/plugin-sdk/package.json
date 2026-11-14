@@ -3,12 +3,14 @@
   "version": "0.0.0",
   "description": "",
   "type": "module",
+  "main": "./dist/index.js",
   "exports": {
     "./host-functions": {
       "import": "./dist/host-functions.js",
       "types": "./dist/host-functions.d.ts"
     },
     ".": {
+      "require": "./dist/index.js",
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
@@ -30,7 +32,7 @@
   "packageManager": "pnpm@12.18.0",
   "devDependencies": {
     "@extism/js-pdk": "^1.1.1",
-    "@immich/sdk": "workspace:*",
+    "@immich/sdk": "file:../sdk",
     "@types/node": "^26.6.6",
     "esbuild": "^0.28.0",
     "tsc-alias": "1.9.10",

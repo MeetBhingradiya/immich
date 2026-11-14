@@ -93,12 +93,6 @@ if %errorlevel% equ 0 (
     set "PATH=C:\Python312;%LOCALAPPDATA%\Programs\Python\Python312;!PATH!"
 )
 
-set "PNPM_EXE=G:\immich\pnpm.exe"
-if not exist "%PNPM_EXE%" (
-    echo   Downloading official standalone pnpm v9.15.4...
-    powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://github.com/pnpm/pnpm/releases/download/v9.15.4/pnpm-win-x64.exe' -OutFile '%PNPM_EXE%' -UseBasicParsing"
-)
-echo   [OK] Standalone pnpm verified.
 
 REM ============================================================
 REM STEP 4: Unpack Latest Immich Database
@@ -145,11 +139,11 @@ echo [6/7] Verifying Dependencies and Immich Server...
 cd /d "G:\immich-app"
 
 if exist "node_modules" if exist "server\node_modules\@immich\plugin-sdk" goto DEPS_OK
-echo   Installing monorepo dependencies via pnpm (live output)...
-call "%PNPM_EXE%" install
+echo   Installing monorepo dependencies via Bun...
+call bun install
 
 :DEPS_OK
-echo   [OK] Immich Server ready at G:\immich-app\server\dist\main.js.
+echo   [OK] Dependencies verified via Bun.
 
 REM ============================================================
 REM STEP 7: Launch Immich Native Windows Runner

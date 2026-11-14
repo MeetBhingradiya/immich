@@ -12,8 +12,18 @@
   "engines": {
     "pnpm": ">=10.0.0"
   },
+  "workspaces": [
+    "packages/*",
+    "server",
+    "web"
+  ],
   "devDependencies": {
     "prettier": "^3.8.3",
     "prettier-plugin-sort-json": "^4.2.0"
+  },
+  "overrides": {
+    "canvas": "3.2.3",
+    "sharp": "^0.35.3",
+    "tsc-alias": "1.9.10"
   }
 }
