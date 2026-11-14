@@ -243,11 +243,19 @@ $ServerNodeModules = Join-Path $ScriptDir "server\node_modules\@immich\plugin-sd
 if (!(Test-Path $NodeModules) -or !(Test-Path $ServerNodeModules)) {
     Write-Host "  Installing monorepo dependencies via pnpm..." -ForegroundColor Cyan
     Set-Location $ScriptDir
-    if (Get-Command pnpm -ErrorAction SilentlyContinue) {
-        pnpm install
+    $PnpmPath = ""
+    if (Test-Path "G:\immich\pnpm.exe") {
+        $PnpmPath = "G:\immich\pnpm.exe"
+    } elseif (Test-Path (Join-Path $StackDir "pnpm.exe")) {
+        $PnpmPath = Join-Path $StackDir "pnpm.exe"
+    } elseif (Get-Command pnpm -ErrorAction SilentlyContinue) {
+        $PnpmPath = (Get-Command pnpm).Source
     } else {
-        bun install
+        $PnpmPath = Join-Path $StackDir "pnpm.exe"
+        Write-Host "  Downloading official standalone pnpm v9.15.4..." -ForegroundColor Cyan
+        Invoke-WebRequest -Uri "https://github.com/pnpm/pnpm/releases/download/v9.15.4/pnpm-win-x64.exe" -OutFile $PnpmPath -UseBasicParsing
     }
+    & $PnpmPath install
 }
 
 # 5. Build Server if not already built

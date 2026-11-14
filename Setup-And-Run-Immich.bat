@@ -93,14 +93,12 @@ if %errorlevel% equ 0 (
     set "PATH=C:\Python312;%LOCALAPPDATA%\Programs\Python\Python312;!PATH!"
 )
 
-where pnpm >nul 2>&1
-if %errorlevel% equ 0 (
-    echo   [OK] pnpm verified.
-) else (
-    echo   Installing pnpm...
-    call bun install -g pnpm
-    set "PATH=%APPDATA%\npm;%USERPROFILE%\.bun\bin;!PATH!"
+set "PNPM_EXE=G:\immich\pnpm.exe"
+if not exist "%PNPM_EXE%" (
+    echo   Downloading official standalone pnpm v9.15.4...
+    powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://github.com/pnpm/pnpm/releases/download/v9.15.4/pnpm-win-x64.exe' -OutFile '%PNPM_EXE%' -UseBasicParsing"
 )
+echo   [OK] Standalone pnpm verified.
 
 REM ============================================================
 REM STEP 4: Unpack Latest Immich Database
@@ -146,21 +144,11 @@ REM ============================================================
 echo [6/7] Verifying Dependencies and Immich Server...
 cd /d "G:\immich-app"
 
-if exist "node_modules" goto DEPS_OK
-echo   Installing dependencies via pnpm (live output)...
-call pnpm install
+if exist "node_modules" if exist "server\node_modules\@immich\plugin-sdk" goto DEPS_OK
+echo   Installing monorepo dependencies via pnpm (live output)...
+call "%PNPM_EXE%" install
 
 :DEPS_OK
-if exist "server\dist\main.js" goto BUILD_DONE
-
-echo   Building monorepo SDK packages...
-call pnpm --filter @immich/sdk build
-call pnpm --filter @immich/plugin-sdk build
-
-echo   Compiling server production bundle...
-call pnpm --filter immich build
-
-:BUILD_DONE
 echo   [OK] Immich Server ready at G:\immich-app\server\dist\main.js.
 
 REM ============================================================
