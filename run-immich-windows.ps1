@@ -10,6 +10,9 @@
 param(
     [string]$UploadDir = "",
     [string]$PgDataDir = "",
+    [string]$DbUser = "",
+    [string]$DbPass = "",
+    [string]$DbName = "",
     [int]$ServerPort = 2283,
     [int]$MlPort = 3003,
     [int]$DbPort = 5432,
@@ -30,6 +33,22 @@ if ([string]::IsNullOrWhiteSpace($UploadDir)) {
         $UploadDir = Join-Path $ScriptDir "photos"
     }
 }
+
+# Smart database credentials from G:\immich\.env if present
+if ([string]::IsNullOrWhiteSpace($DbUser)) {
+    $MasterEnv = "G:\immich\.env"
+    if (Test-Path $MasterEnv) {
+        Get-Content $MasterEnv | ForEach-Object {
+            if ($_ -match '^\s*DB_USERNAME\s*=\s*(.+)$') { $DbUser = $matches[1].Trim() }
+            if ($_ -match '^\s*DB_PASSWORD\s*=\s*(.+)$') { $DbPass = $matches[1].Trim() }
+            if ($_ -match '^\s*DB_DATABASE_NAME\s*=\s*(.+)$') { $DbName = $matches[1].Trim() }
+        }
+    }
+}
+if ([string]::IsNullOrWhiteSpace($DbUser)) { $DbUser = "postgres" }
+if ([string]::IsNullOrWhiteSpace($DbPass)) { $DbPass = "postgres" }
+if ([string]::IsNullOrWhiteSpace($DbName)) { $DbName = "immich" }
+$env:PGPASSWORD = $DbPass
 
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "  IMMICH NATIVE WINDOWS 10 RUNNER (ZERO DOCKER)" -ForegroundColor Cyan
@@ -147,7 +166,7 @@ if (Test-Path $PidFile) {
     Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
 }
 
-# Sanitize postgresql.conf for Windows compatibility (strip BOM, fix posix shared memory)
+# Sanitize postgresql.conf for Windows compatibility (strip BOM, fix posix shared memory, isolate to 127.0.0.1)
 $ConfPath = Join-Path $PgDataDir "postgresql.conf"
 if (Test-Path $ConfPath) {
     [byte[]]$bytes = [System.IO.File]::ReadAllBytes($ConfPath)
@@ -157,14 +176,27 @@ if (Test-Path $ConfPath) {
     $confText = [System.Text.Encoding]::UTF8.GetString($bytes)
     $confText = [regex]::Replace($confText, '(?m)^dynamic_shared_memory_type\s*=.*$', 'dynamic_shared_memory_type = windows')
     $confText = [regex]::Replace($confText, '(?m)^(lc_\w+\s*=\s*''[^'']*\.utf8'')', '#$1')
+    $confText = [regex]::Replace($confText, '(?m)^listen_addresses\s*=.*$', "listen_addresses = '127.0.0.1'")
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
     [System.IO.File]::WriteAllText($ConfPath, $confText, $utf8NoBom)
+}
+
+# Sanitize pg_hba.conf: strictly allow local loopback only (block Tailscale / internet / remote LAN)
+$HbaPath = Join-Path $PgDataDir "pg_hba.conf"
+if (Test-Path $HbaPath) {
+    $hbaText = [System.IO.File]::ReadAllText($HbaPath)
+    $hbaText = [regex]::Replace($hbaText, '(?m)^(host\s+all\s+all\s+all\s+.*)$', '# [Remote blocked for security] $1')
+    if ($hbaText -notmatch '127\.0\.0\.1/32') {
+        $hbaText += "`nhost    all             all             127.0.0.1/32            trust`n"
+    }
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($HbaPath, $hbaText, $utf8NoBom)
 }
 
 # Initialize Postgres cluster if not exists
 if (!(Test-Path (Join-Path $PgDataDir "PG_VERSION"))) {
     Write-Host "  Initializing new PostgreSQL database cluster..." -ForegroundColor Cyan
-    & $InitDbExe -D $PgDataDir -U postgres -A trust -E UTF8
+    & $InitDbExe -D $PgDataDir -U $DbUser -A trust -E UTF8
     Write-Host "  ✓ Database cluster initialized." -ForegroundColor Green
 }
 
@@ -190,9 +222,9 @@ IMMICH_PORT=$ServerPort
 IMMICH_HOST=0.0.0.0
 DB_HOSTNAME=127.0.0.1
 DB_PORT=$DbPort
-DB_USERNAME=postgres
-DB_PASSWORD=postgres
-DB_DATABASE_NAME=immich
+DB_USERNAME=$DbUser
+DB_PASSWORD=$DbPass
+DB_DATABASE_NAME=$DbName
 REDIS_HOSTNAME=127.0.0.1
 REDIS_PORT=$RedisPort
 UPLOAD_LOCATION=$UploadDir
@@ -253,18 +285,31 @@ if ($LASTEXITCODE -ne 0) {
     }
     exit 1
 }
-Write-Host "  ✓ PostgreSQL engine running." -ForegroundColor Green
+Write-Host "  ✓ PostgreSQL engine running (bound strictly to 127.0.0.1)." -ForegroundColor Green
 
-# Ensure database 'immich' exists
+# Ensure database exists and verify credentials
 $PsqlExe = Join-Path $PgsqlDir "bin\psql.exe"
 $CreatedbExe = Join-Path $PgsqlDir "bin\createdb.exe"
-$raw = & $PsqlExe -h 127.0.0.1 -p $DbPort -U postgres -d postgres -t -c "SELECT 1 FROM pg_database WHERE datname='immich';" 2>$null
-$exists = if ($raw) { $raw.Trim() } else { "" }
-if ($exists -ne "1") {
-    & $CreatedbExe -h 127.0.0.1 -p $DbPort -U postgres immich 2>$null
-    Write-Host "  ✓ Created database 'immich'" -ForegroundColor Green
+$raw = & $PsqlExe -h 127.0.0.1 -p $DbPort -U $DbUser -d $DbName -t -c "SELECT 1;" 2>$null
+if (!$raw -or $raw.Trim() -ne "1") {
+    # Check if we can connect as postgres or template1
+    $raw = & $PsqlExe -h 127.0.0.1 -p $DbPort -U postgres -d postgres -t -c "SELECT 1;" 2>$null
+    if ($raw -and $raw.Trim() -eq "1") {
+        # Create DbUser role if it doesn't exist
+        & $PsqlExe -h 127.0.0.1 -p $DbPort -U postgres -d postgres -c "DO `$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '$DbUser') THEN CREATE ROLE $DbUser WITH SUPERUSER LOGIN PASSWORD '$DbPass'; END IF; END `$\$;" 2>$null
+    }
+}
+
+# Ensure postgres superuser role exists for tooling/pgAdmin compatibility
+& $PsqlExe -h 127.0.0.1 -p $DbPort -U $DbUser -d $DbName -c "DO `$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'postgres') THEN CREATE ROLE postgres WITH SUPERUSER LOGIN PASSWORD '$DbPass'; END IF; END `$\$;" 2>$null
+
+# Verify database exists
+$dbExists = & $PsqlExe -h 127.0.0.1 -p $DbPort -U $DbUser -d $DbName -t -c "SELECT 1 FROM pg_database WHERE datname='$DbName';" 2>$null
+if ($dbExists -and $dbExists.Trim() -eq "1") {
+    Write-Host "  ✓ Database '$DbName' verified." -ForegroundColor Green
 } else {
-    Write-Host "  ✓ Database 'immich' verified." -ForegroundColor Green
+    & $CreatedbExe -h 127.0.0.1 -p $DbPort -U $DbUser $DbName 2>$null
+    Write-Host "  ✓ Created database '$DbName'" -ForegroundColor Green
 }
 
 Write-Host "==========================================================" -ForegroundColor Cyan
