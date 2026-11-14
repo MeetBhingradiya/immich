@@ -8,7 +8,8 @@
 
 [CmdletBinding()]
 param(
-    [string]$UploadDir = "M:\Immich-Photos",
+    [string]$UploadDir = "",
+    [string]$PgDataDir = "",
     [int]$ServerPort = 2283,
     [int]$MlPort = 3003,
     [int]$DbPort = 5432,
@@ -19,6 +20,17 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $ScriptDir
 
+# Smart path detection for G:\immich (Desktop) vs M:\Workspace\immich (Laptop)
+if ([string]::IsNullOrWhiteSpace($UploadDir)) {
+    if (Test-Path "G:\immich\Photos") {
+        $UploadDir = "G:\immich\Photos"
+    } elseif (Test-Path "M:\Immich-Photos") {
+        $UploadDir = "M:\Immich-Photos"
+    } else {
+        $UploadDir = Join-Path $ScriptDir "photos"
+    }
+}
+
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "  IMMICH NATIVE WINDOWS 10 RUNNER (ZERO DOCKER)" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
@@ -26,7 +38,14 @@ Write-Host "==========================================================" -Foregro
 # 1. Environment & Stack Directories
 $StackDir = Join-Path $ScriptDir "stack"
 $PgsqlDir = Join-Path $StackDir "pgsql"
-$PgDataDir = Join-Path $StackDir "pgsql-data"
+
+if ([string]::IsNullOrWhiteSpace($PgDataDir)) {
+    if (Test-Path "G:\immich\Database-Laptop-Latest\PG_VERSION") {
+        $PgDataDir = "G:\immich\Database-Laptop-Latest"
+    } else {
+        $PgDataDir = Join-Path $StackDir "pgsql-data"
+    }
+}
 $RedisDir = Join-Path $StackDir "redis"
 $RedisExe = Join-Path $RedisDir "redis-server.exe"
 
