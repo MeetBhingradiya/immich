@@ -147,15 +147,18 @@ if (Test-Path $PidFile) {
     Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
 }
 
-# Patch Linux-specific postgresql.conf settings if ported from Linux/Docker
-$PgConf = Join-Path $PgDataDir "postgresql.conf"
-if (Test-Path $PgConf) {
-    $confContent = Get-Content $PgConf -Raw
-    if ($confContent -match 'dynamic_shared_memory_type\s*=\s*posix') {
-        $confContent = $confContent -replace 'dynamic_shared_memory_type\s*=\s*posix', 'dynamic_shared_memory_type = windows'
-        Set-Content -Path $PgConf -Value $confContent -Encoding UTF8
-        Write-Host "  ✓ Patched dynamic_shared_memory_type to 'windows' in postgresql.conf" -ForegroundColor Green
+# Sanitize postgresql.conf for Windows compatibility (strip BOM, fix posix shared memory)
+$ConfPath = Join-Path $PgDataDir "postgresql.conf"
+if (Test-Path $ConfPath) {
+    [byte[]]$bytes = [System.IO.File]::ReadAllBytes($ConfPath)
+    if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+        $bytes = $bytes[3..($bytes.Length - 1)]
     }
+    $confText = [System.Text.Encoding]::UTF8.GetString($bytes)
+    $confText = [regex]::Replace($confText, '(?m)^dynamic_shared_memory_type\s*=.*$', 'dynamic_shared_memory_type = windows')
+    $confText = [regex]::Replace($confText, '(?m)^(lc_\w+\s*=\s*''[^'']*\.utf8'')', '#$1')
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($ConfPath, $confText, $utf8NoBom)
 }
 
 # Initialize Postgres cluster if not exists
@@ -226,7 +229,19 @@ Write-Host "  ✓ Redis started on port $RedisPort (PID: $($RedisProcess.Id))" -
 
 # Start PostgreSQL
 & $PgCtlExe -D $PgDataDir -l (Join-Path $StackDir "pgsql.log") start
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 3
+
+# Verify PostgreSQL started
+$pgStatus = & $PgCtlExe -D $PgDataDir status 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "  [-] PostgreSQL failed to start. Last log lines:" -ForegroundColor Red
+    $logPath = Join-Path $StackDir "pgsql.log"
+    if (Test-Path $logPath) {
+        Get-Content $logPath -Tail 10 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkRed }
+    }
+    exit 1
+}
+Write-Host "  ✓ PostgreSQL engine running." -ForegroundColor Green
 
 # Ensure database 'immich' exists
 $PsqlExe = Join-Path $PgsqlDir "bin\psql.exe"
