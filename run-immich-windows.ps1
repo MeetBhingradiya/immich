@@ -87,28 +87,49 @@ if (!(Test-Path $RedisExe)) {
     Write-Host "  ✓ Portable Redis binary verified." -ForegroundColor Green
 }
 
-# 4. Setup Portable PostgreSQL 16 if not present
-Write-Host "[3/5] Checking Portable PostgreSQL 16..." -ForegroundColor Yellow
+# 4. Setup Portable PostgreSQL (Matching cluster version)
+$PgVersion = 16
+if (Test-Path (Join-Path $PgDataDir "PG_VERSION")) {
+    $rawVer = (Get-Content (Join-Path $PgDataDir "PG_VERSION") -TotalCount 1).Trim()
+    if ($rawVer -match '^\d+') {
+        $PgVersion = [int]$matches[0]
+    }
+}
+Write-Host "[3/5] Checking Portable PostgreSQL $PgVersion (Cluster requires PG $PgVersion)..." -ForegroundColor Yellow
+
+$PgsqlDir = Join-Path $StackDir "pgsql-$PgVersion"
 $InitDbExe = Join-Path $PgsqlDir "bin\initdb.exe"
 $PgCtlExe = Join-Path $PgsqlDir "bin\pg_ctl.exe"
 
 if (!(Test-Path $InitDbExe)) {
-    Write-Host "  Downloading PostgreSQL 16 portable binaries for Windows..." -ForegroundColor Cyan
-    $PgZip = Join-Path $StackDir "pgsql.zip"
-    $PgUrl = "https://sbp.enterprisedb.com/getfile.jsp?fileid=1258894" # PostgreSQL 16.4 Windows binaries
+    Write-Host "  Downloading PostgreSQL $PgVersion portable binaries for Windows..." -ForegroundColor Cyan
+    $PgZip = Join-Path $StackDir "pgsql-$PgVersion.zip"
+    if ($PgVersion -eq 14) {
+        $PgUrl = "https://sbp.enterprisedb.com/getfile.jsp?fileid=1260676" # PostgreSQL 14.25 Windows binaries
+    } elseif ($PgVersion -eq 15) {
+        $PgUrl = "https://sbp.enterprisedb.com/getfile.jsp?fileid=1260673" # PostgreSQL 15.20 Windows binaries
+    } else {
+        $PgUrl = "https://sbp.enterprisedb.com/getfile.jsp?fileid=1258894" # PostgreSQL 16.4 Windows binaries
+    }
     
     Invoke-WebRequest -Uri $PgUrl -OutFile $PgZip -UseBasicParsing
     Expand-Archive -Path $PgZip -DestinationPath $StackDir -Force
     Remove-Item $PgZip -Force
-    Write-Host "  ✓ PostgreSQL extracted to $PgsqlDir" -ForegroundColor Green
+    
+    $DefaultExtracted = Join-Path $StackDir "pgsql"
+    if ((Test-Path $DefaultExtracted) -and ($DefaultExtracted -ne $PgsqlDir)) {
+        if (Test-Path $PgsqlDir) { Remove-Item $PgsqlDir -Recurse -Force }
+        Rename-Item -Path $DefaultExtracted -NewName "pgsql-$PgVersion"
+    }
+    Write-Host "  ✓ PostgreSQL $PgVersion extracted to $PgsqlDir" -ForegroundColor Green
 }
 
-# Ensure pgvector is installed
+# Ensure matching pgvector is installed
 $VectorDll = Join-Path $PgsqlDir "lib\vector.dll"
 if (!(Test-Path $VectorDll)) {
-    Write-Host "  Downloading pgvector extension for Windows..." -ForegroundColor Cyan
+    Write-Host "  Downloading pgvector extension for PostgreSQL $PgVersion..." -ForegroundColor Cyan
     $VectorZip = Join-Path $StackDir "pgvector.zip"
-    $VectorUrl = "https://github.com/czkwg8/pgvector-windows-binary/releases/download/v0.8.7/pgvector-v0.8.7-pg15-windows-x64.zip"
+    $VectorUrl = "https://github.com/czkwg8/pgvector-windows-binary/releases/download/v0.8.7/pgvector-v0.8.7-pg$PgVersion-windows-x64.zip"
     Invoke-WebRequest -Uri $VectorUrl -OutFile $VectorZip -UseBasicParsing
     Expand-Archive -Path $VectorZip -DestinationPath $PgsqlDir -Force
     Remove-Item $VectorZip -Force
@@ -117,7 +138,13 @@ if (!(Test-Path $VectorDll)) {
     if (!(Test-Path $ExtDir)) { New-Item -ItemType Directory -Path $ExtDir -Force | Out-Null }
     Copy-Item (Join-Path $PgsqlDir "lib\vector*.sql") $ExtDir -Force -ErrorAction SilentlyContinue
     Copy-Item (Join-Path $PgsqlDir "lib\vector.control") $ExtDir -Force -ErrorAction SilentlyContinue
-    Write-Host "  ✓ pgvector extension installed." -ForegroundColor Green
+    Write-Host "  ✓ pgvector extension installed for PG $PgVersion." -ForegroundColor Green
+}
+
+# Remove stale postmaster.pid if present (e.g. from cold copy)
+$PidFile = Join-Path $PgDataDir "postmaster.pid"
+if (Test-Path $PidFile) {
+    Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
 }
 
 # Initialize Postgres cluster if not exists
