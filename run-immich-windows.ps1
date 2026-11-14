@@ -239,7 +239,8 @@ Write-Host "  ✓ Generated $EnvPath (50MB chunking enabled)" -ForegroundColor G
 
 # Ensure workspace dependencies are installed
 $NodeModules = Join-Path $ScriptDir "node_modules"
-if (!(Test-Path $NodeModules)) {
+$ServerNodeModules = Join-Path $ScriptDir "server\node_modules\@immich\plugin-sdk"
+if (!(Test-Path $NodeModules) -or !(Test-Path $ServerNodeModules)) {
     Write-Host "  Installing monorepo dependencies via pnpm..." -ForegroundColor Cyan
     Set-Location $ScriptDir
     if (Get-Command pnpm -ErrorAction SilentlyContinue) {
