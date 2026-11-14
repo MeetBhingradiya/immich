@@ -1,4 +1,4 @@
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from 'src/zod.js';
 import { ImmichHeader } from 'src/enum.js';
 import { isoDatetimeToDate } from 'src/validation.js';
 import { parseDictionary } from 'structured-headers';

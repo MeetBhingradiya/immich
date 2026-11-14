@@ -1,4 +1,4 @@
-import { ZodValidationException } from 'nestjs-zod';
+import { BadRequestException } from '@nestjs/common';
 import { IncomingHttpHeaders } from 'node:http';
 import { UAParser } from 'ua-parser-js';
 import z from 'zod';
@@ -26,10 +26,11 @@ export const getUserAgentDetails = (headers: IncomingHttpHeaders) => {
   };
 };
 
-export function validateSyncOrReject<T>(cls: { schema: z.ZodType<T> }, obj: unknown): T {
-  const result = cls.schema.safeParse(obj);
+export function validateSyncOrReject<T>(cls: { schema: z.ZodType<T> } | any, obj: unknown): T {
+  const schema: z.ZodType<T> = 'schema' in cls ? cls.schema : cls;
+  const result = schema.safeParse(obj);
   if (result.success) {
-    return result.data;
+    return result.data as T;
   }
-  throw new ZodValidationException(result.error);
+  throw new BadRequestException(result.error);
 }
