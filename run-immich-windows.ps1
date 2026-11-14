@@ -334,12 +334,15 @@ try {
         node --env-file=.env dist\main.js
     } else {
         Write-Host "Starting Immich Server via Bun (dist/main.js)..." -ForegroundColor Green
-        $bunCmd = (Get-Command bun -ErrorAction SilentlyContinue)?.Source
-        if (!$bunCmd -and (Test-Path "$env:USERPROFILE\.bun\bin\bun.exe")) {
-            $bunCmd = "$env:USERPROFILE\.bun\bin\bun.exe"
+        $bunCmd = Get-Command bun -ErrorAction SilentlyContinue
+        if ($bunCmd) {
+            $bunPath = $bunCmd.Source
+        } elseif (Test-Path "$env:USERPROFILE\.bun\bin\bun.exe") {
+            $bunPath = "$env:USERPROFILE\.bun\bin\bun.exe"
+        } else {
+            $bunPath = "bun"
         }
-        if (!$bunCmd) { $bunCmd = "bun" }
-        & $bunCmd --env-file=.env dist\main.js
+        & $bunPath --env-file=.env dist\main.js
     }
 } finally {
     Write-Host "`nShutting down native services..." -ForegroundColor Red
