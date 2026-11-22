@@ -67,10 +67,10 @@
 </script>
 
 <div
-  in:fade={{ duration: 100 }}
+  in:fade={{ duration: 150 }}
   out:fade={{ duration: 100 }}
   id="notification-panel"
-  class="absolute top-17.5 right-6 z-1 w-[min(360px,100vw-50px)] rounded-3xl border border-gray-200 bg-gray-100 text-light shadow-lg dark:border dark:border-light dark:bg-immich-dark-gray"
+  class="absolute top-17.5 right-6 z-50 w-[min(380px,calc(100vw-32px))] rounded-3xl border border-white/15 bg-neutral-900/98 text-white shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] backdrop-blur-2xl"
   {@attach focusTrap()}
 >
   <Stack class="max-h-125">

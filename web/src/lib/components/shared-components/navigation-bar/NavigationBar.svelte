@@ -168,26 +168,29 @@
 
 <svelte:window bind:innerWidth />
 
-<nav id="dashboard-navbar" class="h-(--navbar-height) w-dvw text-sm max-md:h-(--navbar-height-md) border-b border-white/10 bg-neutral-950/80 backdrop-blur-xl px-4 select-none">
+<nav id="dashboard-navbar" class="relative z-50 h-(--navbar-height) w-dvw text-sm max-md:h-(--navbar-height-md) border-b border-white/10 bg-neutral-950/80 backdrop-blur-xl px-6 sm:px-8 select-none">
   <SkipLink text={$t('skip_to_content')} />
   <div class="flex h-full items-center justify-between gap-4">
     <!-- Left: Just Immich Only -->
     <div class="flex items-center gap-3 shrink-0">
       <a data-sveltekit-preload-data="hover" href={Route.photos()} class="flex items-center gap-2 group" title="Immich">
-        <Logo variant="inline" class="h-6 transition-transform group-hover:scale-105" />
+        <Logo variant="inline" class="h-8.5 sm:h-9 max-md:h-7 transition-transform duration-200 group-hover:scale-105" />
       </a>
     </div>
 
     <!-- Middle: Dynamic Nav Items with Icons & Labels (Settings-controllable) -->
-    <div class="flex items-center justify-center gap-1 sm:gap-2 lg:gap-4 h-full">
+    <div class="flex items-center justify-center gap-1 sm:gap-2 lg:gap-3 h-full">
       {#each navItems as item (item.id)}
         <a
           data-sveltekit-preload-data="hover"
           href={item.href}
-          class="relative flex flex-col items-center justify-center h-full px-2.5 sm:px-3.5 py-1.5 transition-all duration-200 group rounded-xl hover:bg-white/5 {item.isActive ? 'text-white' : 'text-neutral-400 hover:text-neutral-200'}"
+          class="relative flex flex-col items-center justify-center h-12 my-auto px-3.5 sm:px-4 rounded-2xl transition-all duration-200 ease-out select-none group
+            {item.isActive 
+              ? 'bg-white/12 text-white shadow-xs font-semibold' 
+              : 'text-neutral-400 hover:text-white hover:bg-white/6 font-medium'}"
           title={item.label}
         >
-          <div class="flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+          <div class="flex items-center justify-center transition-all duration-200 group-hover:scale-110">
             <Icon
               icon={item.isActive ? item.activeIcon : item.icon}
               size="22px"
@@ -196,16 +199,17 @@
           </div>
 
           {#if !$hideTopNavLabels}
-            <span class="text-[11px] mt-0.5 tracking-tight transition-colors duration-200 {item.isActive ? 'font-semibold text-white' : 'font-medium'}">
+            <span class="text-[11px] mt-0.5 tracking-tight transition-colors duration-200">
               {item.label}
             </span>
           {/if}
 
-          <!-- Active Page Indicator: Positioned strictly at bottom of navbar to never overlap text -->
+          <!-- Active Page Indicator: Smooth glowing bottom accent bar -->
           {#if item.isActive}
             <span
-              in:fade={{ duration: 150 }}
-              class="absolute bottom-0 inset-x-2 h-[2.5px] rounded-full {item.indicatorColor} transition-all duration-300 shadow-sm"
+              in:fade={{ duration: 200 }}
+              out:fade={{ duration: 150 }}
+              class="absolute bottom-1 inset-x-2.5 h-[2.5px] rounded-full {item.indicatorColor} shadow-[0_0_8px_currentColor] transition-all duration-300"
             ></span>
           {/if}
         </a>
@@ -221,6 +225,7 @@
 
       <!-- Notifications -->
       <div
+        class="relative"
         {@attach clickOutside({
           onOutclick: () => (shouldShowNotificationPanel = false),
           onEscape: () => (shouldShowNotificationPanel = false),
@@ -267,6 +272,7 @@
 
       <!-- User Avatar -->
       <div
+        class="relative"
         {@attach clickOutside({
           onOutclick: () => (shouldShowAccountInfoPanel = false),
           onEscape: () => (shouldShowAccountInfoPanel = false),
@@ -274,7 +280,7 @@
       >
         <button
           type="button"
-          class="flex ps-1 cursor-pointer"
+          class="flex ps-1 cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95"
           onclick={() => (shouldShowAccountInfoPanel = !shouldShowAccountInfoPanel)}
           title="{authManager.user.name} ({authManager.user.email})"
         >

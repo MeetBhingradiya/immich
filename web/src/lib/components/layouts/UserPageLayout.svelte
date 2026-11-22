@@ -45,7 +45,7 @@
   let hasTitleClass = $derived(title ? 'top-16 h-[calc(100%-(--spacing(16)))]' : 'top-0 h-full');
 </script>
 
-<header>
+<header class="relative z-50">
   {#if !hideNavbar}
     <NavigationBar onUploadClick={() => openFileUploadDialog()} />
   {/if}
