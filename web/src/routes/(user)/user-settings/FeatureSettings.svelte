@@ -3,6 +3,7 @@
   import { authManager } from '#lib/managers/auth-manager.svelte.ts';
   import { createPreloadedQuery } from '#lib/queries/client.ts';
   import { getUserConfigQuery } from '#lib/queries/config-user.query.ts';
+  import { hideTopNavLabels } from '#lib/stores/preferences.store.ts';
   import { handleError } from '#lib/utils/handle-error.ts';
   import { AssetOrder, PersonUpdateStrategy, updateMyPreferences } from '@immich/sdk';
   import { Button, Field, NumberInput, Select, Switch, toastManager } from '@immich/ui';
@@ -206,6 +207,14 @@
           <div class="mt-4 flex flex-col gap-4 sm:ms-4">
             <Field label={$t('sidebar')} description={$t('sidebar_display_description')}>
               <Switch bind:checked={recentlyAddedSidebar} />
+            </Field>
+          </div>
+        </SettingAccordion>
+
+        <SettingAccordion key="navigation" title="Top Navigation Bar" subtitle="Customize the top navigation layout and labels">
+          <div class="mt-4 flex flex-col gap-4 sm:ms-4">
+            <Field label="Hide navigation labels" description="Display only icons in the top navigation bar for a cleaner compact look">
+              <Switch bind:checked={$hideTopNavLabels} />
             </Field>
           </div>
         </SettingAccordion>
