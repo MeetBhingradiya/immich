@@ -165,7 +165,7 @@
       onclick={handleClick}
     />
   </div>
-  {#if isOpen || !hideContent}
+  {#if isOpen}
     <div
       {@attach shortcuts([
         {

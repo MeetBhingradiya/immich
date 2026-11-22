@@ -172,7 +172,9 @@ class TransformManager implements EditToolManager {
   }
 
   async onActivate(asset: AssetResponseDto, edits: EditActions): Promise<void> {
-    const originalSize = getDimensions(asset.exifInfo!);
+    const originalSize = asset.exifInfo
+      ? getDimensions(asset.exifInfo)
+      : { width: asset.width ?? 0, height: asset.height ?? 0 };
     this.originalImageSize = { width: originalSize.width ?? 0, height: originalSize.height ?? 0 };
 
     this.imgElement = new Image();
@@ -184,8 +186,10 @@ class TransformManager implements EditToolManager {
       size: AssetMediaSize.Preview,
     });
 
+    const safeEdits = Array.isArray(edits) ? edits : [];
+
     this.imgElement.src = imageURL;
-    this.imgElement.addEventListener('load', () => transformManager.onImageLoad(edits), { passive: true });
+    this.imgElement.addEventListener('load', () => transformManager.onImageLoad(safeEdits), { passive: true });
     this.imgElement.addEventListener('error', (error) => handleError(error, 'ErrorLoadingImage'), {
       passive: true,
     });
@@ -193,7 +197,7 @@ class TransformManager implements EditToolManager {
     // eslint-disable-next-line unicorn/no-unnecessary-global-this
     globalThis.addEventListener('mousemove', (e: MouseEvent) => transformManager.handleMouseMove(e), { passive: true });
 
-    const transformEdits = edits.filter((e) => e.action === 'rotate' || e.action === 'mirror');
+    const transformEdits = safeEdits.filter((e) => e.action === 'rotate' || e.action === 'mirror');
 
     // Normalize rotation and mirror edits to single rotation and mirror state
     // This allows edits to be imported in any order and still produce correct state

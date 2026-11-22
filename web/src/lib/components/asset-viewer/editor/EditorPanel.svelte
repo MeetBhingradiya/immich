@@ -26,8 +26,13 @@
   }
 
   onMount(async () => {
-    const edits = await getAssetEdits({ id: asset.id });
-    await editManager.activateTool(EditToolType.Transform, asset, edits);
+    try {
+      const edits = await getAssetEdits({ id: asset.id });
+      await editManager.activateTool(EditToolType.Transform, asset, edits ?? { edits: [] });
+    } catch (err) {
+      console.warn('Could not load existing edits for asset, starting clean:', err);
+      await editManager.activateTool(EditToolType.Transform, asset, { edits: [] });
+    }
   });
 
   onDestroy(() => {

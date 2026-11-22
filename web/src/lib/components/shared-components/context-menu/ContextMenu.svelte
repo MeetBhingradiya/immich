@@ -64,11 +64,11 @@
 <div
   bind:this={menuScrollView}
   class={[
-    'fixed z-70 w-max max-w-80 min-w-56 immich-scrollbar rounded-2xl p-1.5 duration-200 ease-out',
+    'fixed z-70 w-max max-w-80 min-w-56 immich-scrollbar rounded-2xl duration-200 ease-out',
     'bg-white/95 dark:bg-neutral-900/95 backdrop-blur-2xl',
-    'border border-slate-200/80 dark:border-white/10',
     'shadow-[0_16px_40px_rgba(0,0,0,0.45)]',
     position.needScrollBar ? 'overflow-auto' : 'overflow-hidden',
+    isVisible ? 'p-1.5 border border-slate-200/80 dark:border-white/10 opacity-100 pointer-events-auto' : 'p-0 border-0 opacity-0 pointer-events-none invisible hidden',
   ]}
   style:left="{position.left}px"
   style:top="{position.top}px"

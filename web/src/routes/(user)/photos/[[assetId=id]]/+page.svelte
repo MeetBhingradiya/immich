@@ -1,6 +1,7 @@
 <script lang="ts">
   import ActionMenuItem from '#lib/components/ActionMenuItem.svelte';
   import UserPageLayout from '#lib/components/layouts/UserPageLayout.svelte';
+  import OneDriveGalleryLayoutMenu from '#lib/components/photos-page/OneDriveGalleryLayoutMenu.svelte';
   import MemoryCard from '#lib/components/memories/MemoryCard.svelte';
   import EmptyPlaceholder from '#lib/components/shared-components/EmptyPlaceholder.svelte';
   import ButtonContextMenu from '#lib/components/shared-components/context-menu/ButtonContextMenu.svelte';
@@ -89,6 +90,12 @@
 </script>
 
 <UserPageLayout hideNavbar={assetMultiSelectManager.selectionActive} scrollbar={false}>
+  {#if !assetMultiSelectManager.selectionActive}
+    <div class="fixed top-17 right-6 z-40 max-md:top-15 max-md:right-3">
+      <OneDriveGalleryLayoutMenu {timelineManager} />
+    </div>
+  {/if}
+
   <Timeline
     enableRouting={true}
     bind:timelineManager

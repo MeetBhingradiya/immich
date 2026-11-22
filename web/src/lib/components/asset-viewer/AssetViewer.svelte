@@ -25,7 +25,8 @@
   import { ocrManager } from '#lib/stores/ocr.svelte.ts';
   import { alwaysLoadOriginalVideo } from '#lib/stores/preferences.store.ts';
   import { SlideshowNavigation, SlideshowState, slideshowStore } from '#lib/stores/slideshow.store.ts';
-  import { getSharedLink, handlePromiseError } from '#lib/utils.ts';
+  import { getAssetMediaUrl, getSharedLink, handlePromiseError } from '#lib/utils.ts';
+  import Thumbhash from '#lib/components/Thumbhash.svelte';
   import type { OnUndoDelete } from '#lib/utils/actions.ts';
   import { navigateToAsset } from '#lib/utils/asset-utils.ts';
   import { handleError } from '#lib/utils/handle-error.ts';
@@ -34,6 +35,7 @@
   import { SlideshowHistory } from '#lib/utils/slideshow-history.ts';
   import { toTimelineAsset } from '#lib/utils/timeline-util.ts';
   import {
+    AssetMediaSize,
     AssetTypeEnum,
     ReactionType,
     getAssetInfo,
@@ -438,7 +440,7 @@
     ) {
       return 'ImagePanaramaViewer';
     }
-    if (assetViewerManager.isShowEditor && editManager.selectedTool?.type === EditToolType.Transform) {
+    if (assetViewerManager.isShowEditor) {
       return 'CropArea';
     }
     return 'PhotoViewer';
@@ -500,10 +502,29 @@
 
 <section
   id="immich-asset-viewer"
-  class="fixed inset-0 z-[10000] grid size-full grid-cols-4 {$slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor ? 'grid-rows-[56px_1fr]' : 'grid-rows-1'} overflow-hidden bg-[#0c0c0c]"
+  class="fixed inset-0 z-[10000] grid size-full grid-cols-4 {$slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor ? 'grid-rows-[56px_1fr]' : 'grid-rows-1'} overflow-hidden bg-[#090a0c]"
   {@attach focusTrap()}
   bind:this={assetViewerHtmlElement}
 >
+  <!-- OneDrive Atmospheric Ambient Lighting Aura -->
+  {#if $slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor}
+    <div
+      class="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden select-none"
+      aria-hidden="true"
+    >
+      <div class="h-[80vh] w-[85vw] max-w-[1400px] rounded-full blur-[110px] opacity-65 saturate-[240%] scale-125 transition-all duration-700 ease-out">
+        {#if asset.thumbhash}
+          <Thumbhash base64ThumbHash={asset.thumbhash} class="size-full object-cover rounded-full" />
+        {:else}
+          <img
+            src={getAssetMediaUrl({ id: asset.id, cacheKey: asset.thumbhash, size: AssetMediaSize.Thumbnail })}
+            alt=""
+            class="size-full object-cover rounded-full"
+          />
+        {/if}
+      </div>
+    </div>
+  {/if}
   <!-- Top navigation bar -->
   {#if $slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor}
     <div class="col-span-4 col-start-1 row-span-1 row-start-1 z-30 transition-transform">

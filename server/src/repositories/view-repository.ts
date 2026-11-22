@@ -1,4 +1,4 @@
-import type { Kysely } from 'kysely';
+import { sql, type Kysely } from 'kysely';
 import { trim } from 'lodash-es';
 import { InjectKysely } from 'nestjs-kysely';
 import { DummyValue, GenerateSql } from 'src/decorators.js';
@@ -15,11 +15,8 @@ export class ViewRepository {
   async getUniqueOriginalPaths(userId: string) {
     const results = await this.db
       .selectFrom('asset')
-      .select((eb) =>
-        eb.fn<string>('substring', [
-          eb.fn('replace', ['asset.originalPath', eb.val('\\'), eb.val('/')]),
-          eb.val('^(.*/)[^/]*$'),
-        ]).as('directoryPath'),
+      .select(
+        sql<string>`substring(replace("asset"."originalPath", '\', '/'), '^(.*/)[^/]*$')`.as('directoryPath'),
       )
       .distinct()
       .where('ownerId', '=', asUuid(userId))
@@ -53,23 +50,10 @@ export class ViewRepository {
       .where('fileCreatedAt', 'is not', null)
       .where('fileModifiedAt', 'is not', null)
       .where('localDateTime', 'is not', null)
-      .where(
-        (eb) => eb.fn('replace', ['asset.originalPath', eb.val('\\'), eb.val('/')]),
-        'like',
-        `${prefix}%`,
-      )
-      .where(
-        (eb) => eb.fn('replace', ['asset.originalPath', eb.val('\\'), eb.val('/')]),
-        'not like',
-        `${prefix}%/%`,
-      )
+      .where(sql<string>`replace("asset"."originalPath", '\', '/')`, 'like', `${prefix}%`)
+      .where(sql<string>`replace("asset"."originalPath", '\', '/')`, 'not like', `${prefix}%/%`)
       .orderBy(
-        (eb) =>
-          eb.fn('regexp_replace', [
-            eb.fn('replace', ['asset.originalPath', eb.val('\\'), eb.val('/')]),
-            eb.val('.*/(.+)'),
-            eb.val(String.raw`\1`),
-          ]),
+        sql<string>`regexp_replace(replace("asset"."originalPath", '\', '/'), '.*/(.+)', '\1')`,
         'asc',
       )
       .execute();

@@ -231,7 +231,7 @@
   {@render backdrop?.()}
 
   <div
-    class="pointer-events-none absolute overflow-hidden"
+    class="pointer-events-none absolute overflow-hidden rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.65)]"
     style:inset-inline-start={insetInlineStart}
     style:top
     style:width={displayWidth}
