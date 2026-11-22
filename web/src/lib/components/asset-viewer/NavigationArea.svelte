@@ -12,7 +12,7 @@
 
 <button
   type="button"
-  class="mx-4 my-auto flex size-12 items-center justify-center rounded-full bg-black/50 text-white/90 backdrop-blur-xl border border-white/15 hover:bg-white/20 hover:text-white hover:scale-105 active:scale-95 transition-all duration-200 shadow-[0_4px_24px_rgba(0,0,0,0.6)] cursor-pointer"
+  class="mx-4 my-auto rounded-full p-3 text-gray-500 transition hover:bg-gray-500 hover:text-white"
   aria-label={label}
   onclick={onClick}
 >

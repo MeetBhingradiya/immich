@@ -1,8 +1,8 @@
 <script lang="ts">
   import { searchManager } from '#lib/managers/search-manager.svelte.ts';
   import { searchStore } from '#lib/stores/search.svelte.ts';
-  import { Icon } from '@immich/ui';
-  import { mdiClose } from '@mdi/js';
+  import { Icon, IconButton, Text } from '@immich/ui';
+  import { mdiClockOutline, mdiClose } from '@mdi/js';
   import { t } from 'svelte-i18n';
 
   interface Props {
@@ -20,18 +20,25 @@
   );
 
   let isSearchSuggestions = $derived(filteredSearchTerms.length > 0);
+
   let showClearAll = $derived(searchBoxText === '');
+  let suggestionCount = $derived(showClearAll ? filteredSearchTerms.length + 1 : filteredSearchTerms.length);
+
   let selectedIndex: number | undefined = $state(undefined);
+  let element = $state<HTMLDivElement>();
 
   const rootId = $props.id();
 
   export function moveSelection(increment: 1 | -1) {
-    if (!isSearchSuggestions) return;
-    const count = filteredSearchTerms.length;
+    if (!isSearchSuggestions) {
+      return;
+    }
     if (selectedIndex === undefined) {
-      selectedIndex = increment === 1 ? 0 : count - 1;
+      selectedIndex = increment === 1 ? 0 : suggestionCount - 1;
+    } else if (selectedIndex + increment < 0 || selectedIndex + increment >= suggestionCount) {
+      clearSelection();
     } else {
-      selectedIndex = (selectedIndex + increment + count) % count;
+      selectedIndex = (selectedIndex + increment + suggestionCount) % suggestionCount;
     }
     onActiveSelectionChange(getId(selectedIndex));
   }
@@ -42,9 +49,11 @@
   }
 
   export function selectActiveOption() {
-    if (selectedIndex === undefined) return;
-    const term = filteredSearchTerms[selectedIndex];
-    if (term) handleSelect(term);
+    if (selectedIndex === undefined) {
+      return;
+    }
+    const selectedElement = element?.querySelector(`#${getId(selectedIndex)}`) as HTMLElement;
+    selectedElement?.click();
   }
 
   const handleClearAll = () => {
@@ -63,76 +72,64 @@
   };
 
   const getId = (index: number | undefined) => {
-    if (index === undefined) return undefined;
+    if (index === undefined) {
+      return undefined;
+    }
     return `${rootId}-entry-${index}`;
   };
 </script>
 
-<div id="history-section" class="px-5 pt-4 pb-2">
+<div id="history-section">
   {#if isSearchSuggestions}
-    <div class="flex items-center justify-between mb-2">
-      <span class="text-xs font-semibold text-neutral-400">{$t('recent_searches')}</span>
+    <div class="flex items-center justify-between px-5 pt-5">
+      <Text aria-hidden={true} fontWeight="medium" class="pb-5">{$t('recent_searches')}</Text>
       {#if showClearAll}
         <button
+          id={getId(0)}
           type="button"
-          class="text-xs text-neutral-400 hover:text-white transition-colors cursor-pointer"
-          onclick={handleClearAll}
+          class="rounded-lg p-2 font-semibold text-primary hover:bg-immich-primary/25 aria-selected:bg-immich-primary/25"
+          role="option"
+          onclick={() => handleClearAll()}
+          tabindex="-1"
+          aria-selected={selectedIndex === 0}
+          aria-label={$t('clear_all_recent_searches')}
         >
           {$t('clear_all')}
         </button>
       {/if}
     </div>
 
-    <!-- Chips Row matching OneDrive Reference Screenshot 7 -->
-    <div class="flex flex-wrap gap-2 mb-3">
-      {#each filteredSearchTerms as savedSearchTerm, i (i)}
-        <div
-          id={getId(i)}
-          class="inline-flex items-center gap-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 px-3 py-1 text-xs text-neutral-200 transition-all cursor-pointer group"
-          role="option"
-          tabindex="-1"
-          aria-selected={selectedIndex === i}
-        >
-          <button
-            type="button"
-            class="hover:text-white"
+    {#each filteredSearchTerms as savedSearchTerm, i (i)}
+      <div class="flex w-full items-center justify-between text-black dark:text-gray-300">
+        <div class="relative w-full items-center">
+          {const index = $derived(showClearAll ? i + 1 : i)}
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <div
+            id={getId(index)}
+            class="relative flex w-full cursor-pointer gap-3 py-3 ps-5 hover:bg-gray-100 aria-selected:bg-gray-100 dark:hover:bg-gray-500/30 dark:aria-selected:bg-gray-500/30"
             onclick={() => handleSelect(savedSearchTerm)}
+            role="option"
+            tabindex="-1"
+            aria-selected={selectedIndex === index}
+            aria-label={savedSearchTerm}
           >
+            <Icon icon={mdiClockOutline} size="1.5em" aria-hidden />
             {savedSearchTerm}
-          </button>
-          <button
-            type="button"
-            class="text-neutral-400 hover:text-white p-0.5 rounded-full hover:bg-white/10"
-            onclick={() => handleClearSingle(savedSearchTerm)}
-            aria-label="Remove"
-          >
-            <Icon icon={mdiClose} size="12px" />
-          </button>
+          </div>
+          <div aria-hidden={true} class="absolute inset-e-5 top-0 items-center justify-center py-1">
+            <IconButton
+              shape="round"
+              color="secondary"
+              variant="ghost"
+              icon={mdiClose}
+              aria-label={$t('remove')}
+              size="medium"
+              tabindex={-1}
+              onclick={() => handleClearSingle(savedSearchTerm)}
+            />
+          </div>
         </div>
-      {/each}
-    </div>
+      </div>
+    {/each}
   {/if}
-
-  <!-- Examples Section matching OneDrive Reference Screenshot 7 -->
-  <div class="mt-2 pt-2 border-t border-white/5">
-    <p class="text-xs font-semibold text-neutral-400 mb-2">Examples</p>
-    <div class="space-y-1">
-      {#each [
-        'Hiking in the mountains',
-        'Fireworks by the beach',
-        'Field hockey action shot',
-        'Sunset at golden hour',
-        'Screenshots and documents'
-      ] as example}
-        <button
-          type="button"
-          class="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-xs text-neutral-300 hover:bg-white/10 hover:text-white text-start transition-colors cursor-pointer"
-          onclick={() => handleSelect(example)}
-        >
-          <span class="text-amber-400 text-sm">💡</span>
-          <span>{example}</span>
-        </button>
-      {/each}
-    </div>
-  </div>
 </div>

@@ -405,13 +405,13 @@
         {disabled}
       >
         {#if disabled}
-          <Icon icon={mdiCheckCircle} size="22" class="text-zinc-800" />
+          <Icon icon={mdiCheckCircle} size="24" class="text-zinc-800" />
         {:else if selected}
-          <div class="rounded-full bg-blue-600 text-white shadow-md">
-            <Icon icon={mdiCheckCircle} size="22" class="text-white" />
+          <div class="rounded-full bg-[#D9DCEF] dark:bg-[#232932]">
+            <Icon icon={mdiCheckCircle} size="24" class="text-primary" />
           </div>
         {:else}
-          <div class="size-5.5 rounded-full border-2 border-white/80 bg-black/25 shadow-sm transition-all group-hover/select:border-white group-hover/select:bg-black/40"></div>
+          <Icon icon={mdiCheckCircle} size="24" class="text-white/80 group-hover/select:text-white" />
         {/if}
       </button>
     {/if}

@@ -64,7 +64,7 @@
 
 <div class="mt-4">
   {#if !isCollapsed}
-    <div class="grid grid-auto-fill-64 gap-6" transition:slide={{ duration: 300 }}>
+    <div class="grid grid-auto-fill-56 gap-y-4" transition:slide={{ duration: 300 }}>
       {#each albums as album, index (album.id)}
         {const { Edit, Share, Download, Leave, Delete } = $derived(getAlbumActions($t, album))}
         {const items = $derived([Edit, Share, Download, Leave, Delete])}

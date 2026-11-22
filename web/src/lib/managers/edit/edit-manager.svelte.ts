@@ -84,16 +84,19 @@ export class EditManager {
     this.selectedTool = this.tools[0];
   }
 
-  async activateTool(toolType: EditToolType, asset: AssetResponseDto, edits?: AssetEditsCreateDto | null) {
+  async activateTool(toolType: EditToolType, asset: AssetResponseDto, edits: AssetEditsCreateDto) {
     this.hasAppliedEdits = false;
+    if (this.selectedTool?.type === toolType) {
+      return;
+    }
+
     this.currentAsset = asset;
 
     this.selectedTool?.manager.onDeactivate?.();
     const newTool = this.tools.find((t) => t.type === toolType);
     if (newTool) {
       this.selectedTool = newTool;
-      const safeEditsList = edits?.edits && Array.isArray(edits.edits) ? edits.edits : [];
-      await newTool.manager.onActivate?.(asset, safeEditsList);
+      await newTool.manager.onActivate?.(asset, edits.edits);
     }
   }
 

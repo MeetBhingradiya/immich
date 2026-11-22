@@ -106,12 +106,8 @@ function isFlipped(orientation?: string | null) {
   return value && (isRotated270CW(value) || isRotated90CW(value));
 }
 
-export const getDimensions = (exifInfo?: ExifResponseDto | null) => {
-  if (!exifInfo) {
-    return { width: 0, height: 0 };
-  }
-  const width = exifInfo.exifImageWidth ?? 0;
-  const height = exifInfo.exifImageHeight ?? 0;
+export const getDimensions = (exifInfo: ExifResponseDto) => {
+  const { exifImageWidth: width, exifImageHeight: height } = exifInfo;
   if (isFlipped(exifInfo.orientation)) {
     return { width: height, height: width };
   }

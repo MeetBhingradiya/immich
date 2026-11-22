@@ -153,10 +153,11 @@
         type="text"
         name="q"
         id="main-search-bar"
-        class="w-full border py-3 ps-12 text-sm text-immich-fg transition-all max-md:py-2 dark:text-immich-dark-fg
-        {showClearIcon ? 'pe-20' : 'pe-12'}
-        {showSuggestions ? 'rounded-t-3xl shadow-[0_12px_32px_rgba(0,0,0,0.4)] border-white/20 bg-neutral-900/95 dark:bg-neutral-900/95' : 'rounded-full border-white/10 bg-neutral-900/60 dark:bg-neutral-900/60 hover:border-white/20'}
-        backdrop-blur-xl outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 shadow-md"
+        class="w-full border-b py-4 ps-14 text-immich-fg/75 transition-all max-md:py-2 dark:text-immich-dark-fg
+        {showClearIcon ? 'pe-22.5' : 'pe-14'}
+        {grayTheme || showSuggestions ? 'dark:bg-immich-dark-gray' : 'dark:bg-immich-dark-bg'}
+        {showSuggestions ? 'rounded-t-3xl shadow-[0_8px_20px_rgba(0,0,0,0.12)]' : 'rounded-3xl bg-gray-200'}
+        {searchStore.isSearchEnabled ? 'border-light-200 bg-white dark:border-dark-600' : 'border-transparent'}"
         {placeholder}
         required
         pattern="^(?!m:$).*$"

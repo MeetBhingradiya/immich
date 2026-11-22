@@ -153,15 +153,7 @@
   const { insetInlineStart, top, displayWidth, displayHeight, rasterWidth, rasterHeight, rasterScale } = $derived.by(
     () => {
       const scaleFn = objectFit === 'cover' ? scaleToCover : scaleToFit;
-      // Provide safe breathing room for contained views so images never touch or clip under bars
-      const fitContainer =
-        objectFit === 'contain'
-          ? {
-              width: Math.max(0, container.width - 32),
-              height: Math.max(0, container.height - 48),
-            }
-          : container;
-      const { width, height } = scaleFn(imageDimensions, fitContainer);
+      const { width, height } = scaleFn(imageDimensions, container);
       if (maxRasterPixels === 0) {
         return {
           insetInlineStart: (container.width - width) / 2 + 'px',
@@ -231,7 +223,7 @@
   {@render backdrop?.()}
 
   <div
-    class="pointer-events-none absolute overflow-hidden rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.65)]"
+    class="pointer-events-none absolute overflow-hidden"
     style:inset-inline-start={insetInlineStart}
     style:top
     style:width={displayWidth}

@@ -26,16 +26,8 @@
     type PersonResponseDto,
     type StackResponseDto,
   } from '@immich/sdk';
-  import { ActionButton, CommandPaletteDefaultProvider, Icon, Tooltip, type ActionItem } from '@immich/ui';
-  import {
-    mdiArrowLeft,
-    mdiArrowRight,
-    mdiCalendarBlankOutline,
-    mdiCrop,
-    mdiDotsHorizontal,
-    mdiFullscreen,
-    mdiVideoOutline,
-  } from '@mdi/js';
+  import { ActionButton, CommandPaletteDefaultProvider, Tooltip, type ActionItem } from '@immich/ui';
+  import { mdiArrowLeft, mdiArrowRight, mdiDotsVertical, mdiVideoOutline } from '@mdi/js';
   import { t } from 'svelte-i18n';
 
   interface Props {
@@ -87,88 +79,55 @@
   const Actions = $derived(getAssetActions($t, { ...asset, stackPrimaryAssetId: stack?.primaryAssetId }, album));
   const StackActions = $derived(getStackActions($t, stack, asset));
   const sharedLink = getSharedLink();
-
-  const formattedDate = $derived.by(() => {
-    const raw = asset.localDateTime || asset.fileCreatedAt;
-    if (!raw) return '';
-    try {
-      const d = new Date(raw);
-      if (isNaN(d.getTime())) return '';
-      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-    } catch {
-      return '';
-    }
-  });
 </script>
 
 <CommandPaletteDefaultProvider name={$t('assets')} actions={withoutIcons([Close, Cast, ...Object.values(Actions)])} />
 
 <div
-  class="relative isolate flex h-14 place-items-center justify-between px-6 bg-transparent transition-transform duration-200"
+  class="relative isolate flex h-16 place-items-center justify-between px-3 drop-shadow-[0_0_1px_rgba(0,0,0,0.4)] transition-transform duration-200"
 >
-  <div class="flex items-center gap-3">
-    {#if onClose && !assetViewerManager.isFaceEditMode && !assetViewerManager.isEditFacesPanelOpen}
-      <button
-        type="button"
-        class="flex size-9 items-center justify-center rounded-full hover:bg-white/10 text-white/90 hover:text-white transition-colors cursor-pointer"
-        onclick={() => onClose?.()}
-        title={$t('go_back')}
-      >
-        <Icon icon={languageManager.rtl ? mdiArrowRight : mdiArrowLeft} size="20" />
-      </button>
-    {/if}
-    {#if formattedDate}
-      <div class="flex items-center gap-2 text-sm font-medium text-white/90 select-none">
-        <Icon icon={mdiCalendarBlankOutline} size="16" class="text-white/70" />
-        <span>{formattedDate}</span>
-      </div>
-    {/if}
+  <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-24 bg-black/40 mask-smoothstep-to-bottom"></div>
+  <div class="dark">
+    <ActionButton action={Close} />
   </div>
 
   <div
-    class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-neutral-900/80 backdrop-blur-2xl border border-white/10 shadow-2xl"
+    class="dark -m-1 flex items-center gap-2 overflow-x-auto p-1 *:shrink-0"
     data-testid="asset-viewer-navbar-actions"
   >
     {#if assetViewerManager.isImageLoading}
       <Tooltip text={$t('loading')}>
         {#snippet child({ props })}
           <div {...props} role="status" aria-label={$t('loading')}>
-            <LoadingDots class="mx-1" />
+            <LoadingDots class="me-1" />
           </div>
         {/snippet}
       </Tooltip>
     {/if}
-
-    <!-- OneDrive-style prominent Edit Pill -->
-    {#if Actions.Edit && (Actions.Edit.$if?.() ?? true)}
-      <button
-        type="button"
-        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-white/15 text-white text-xs font-medium transition-colors cursor-pointer"
-        onclick={() => Actions.Edit.onAction?.()}
-        title={$t('edit')}
-      >
-        <Icon icon={mdiCrop} size="16" />
-        <span>{$t('edit')}</span>
-      </button>
-    {/if}
-
+    <ActionButton action={Cast} />
     <ActionButton action={Actions.Share} />
+    <ActionButton action={Actions.Offline} />
+    <ActionButton action={Actions.ZoomIn} />
+    <ActionButton action={Actions.ZoomOut} />
+    <ActionButton action={Actions.PlayMotionPhoto} />
+    <ActionButton action={Actions.StopMotionPhoto} />
+    <ActionButton action={Actions.Copy} />
+    <ActionButton action={Actions.SharedLinkDownload} />
+    <ActionButton action={Actions.Info} />
+    <ActionButton action={Actions.Favorite} />
+    <ActionButton action={Actions.Unfavorite} />
+    <ActionButton action={Actions.Edit} />
+
     {#if isOwner}
       <DeleteAction {asset} {onAction} {preAction} {onUndoDelete} />
     {/if}
-    <ActionButton action={Actions.Favorite} />
-    <ActionButton action={Actions.Unfavorite} />
 
     {#if !sharedLink}
-      <ButtonContextMenu direction="left" align="top-right" color="secondary" title={$t('more')} icon={mdiDotsHorizontal}>
+      <ButtonContextMenu direction="left" align="top-right" color="secondary" title={$t('more')} icon={mdiDotsVertical}>
         <ActionMenuItem action={Actions.PlaySlideshow} />
+
         <ActionMenuItem action={Actions.Download} />
         <ActionMenuItem action={Actions.DownloadOriginal} />
-        <ActionMenuItem action={Actions.Copy} />
-        <ActionMenuItem action={Actions.Offline} />
-        <ActionMenuItem action={Actions.PlayMotionPhoto} />
-        <ActionMenuItem action={Actions.StopMotionPhoto} />
-        <ActionMenuItem action={Actions.SharedLinkDownload} />
 
         {#if !isLocked && asset.isTrashed}
           <RestoreAction {asset} {onAction} />

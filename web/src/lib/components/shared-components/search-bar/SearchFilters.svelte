@@ -3,7 +3,7 @@
   import { searchManager } from '#lib/managers/search-manager.svelte.ts';
   import { getAllTagsQuery } from '#lib/queries/tag.query.ts';
   import { type PersonResponseDto } from '@immich/sdk';
-  import { Button, Icon, Text } from '@immich/ui';
+  import { Button, Text } from '@immich/ui';
   import {
     mdiAccount,
     mdiCalendarBlank,
@@ -63,8 +63,7 @@
 
   let searchHistory = $state<SearchHistorySection>();
 
-  let activeFilter = $state<string | undefined>(undefined);
-  let showFilters = $state(false);
+  let activeFilter = $state('type');
   let showAdvanced = $state(false);
   let peoplePromise = $state<Promise<PersonResponseDto[]>>();
   let people = $state<PersonResponseDto[]>();
@@ -192,7 +191,7 @@
   {#if isOpen}
     <div
       transition:fly={{ y: 25, duration: 250 }}
-      class="absolute z-1 max-h-[80svh] w-full overflow-y-auto rounded-b-3xl border-x border-b border-white/20 bg-neutral-900/95 backdrop-blur-2xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] transition-all text-neutral-200"
+      class="absolute z-1 max-h-[80svh] w-full overflow-y-auto rounded-b-3xl bg-white shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition-all dark:bg-immich-dark-gray dark:text-gray-300"
     >
       <SearchHistorySection
         bind:this={searchHistory}
@@ -201,128 +200,75 @@
         {onClearAllSearchTerms}
         {onActiveSelectionChange}
       />
-      <!-- Smart Quick Categories (OneDrive Luxury Experience) -->
-      <div class="px-5 py-3 border-t border-white/5">
-        <p class="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 mb-2">Smart Categories</p>
-        <div class="flex flex-wrap gap-1.5">
-          {#each [
-            { label: '🌅 Sunsets', q: 'sunset' },
-            { label: '📸 Screenshots', q: 'screenshot' },
-            { label: '👤 Portraits', q: 'portrait face' },
-            { label: '🐾 Pets', q: 'pet dog cat animal' },
-            { label: '❤️ Favorites', q: 'favorite' },
-            { label: '🏖️ Trips', q: 'vacation trip beach' },
-            { label: '📄 Documents', q: 'document text receipt' },
-            { label: '🌃 Night', q: 'night lights' }
-          ] as chip}
-            <button
-              type="button"
-              class="inline-flex items-center rounded-full bg-white/5 hover:bg-primary/20 hover:text-primary hover:border-primary/40 border border-white/10 px-3 py-1 text-xs font-medium text-neutral-300 transition-all cursor-pointer"
-              onclick={() => onSelectSearchTerm(chip.q)}
+      <div class="px-5">
+        <Text class="py-5" fontWeight="medium" aria-hidden={true}>{$t('filter_by')}</Text>
+        <div class="flex flex-wrap gap-2">
+          {#each filters as item (item.name)}
+            <SearchButton
+              active={activeFilter === item.name || Boolean(item.activeTitle())}
+              leadingIcon={item.icon}
+              class={activeFilter === item.name ? 'border-2' : undefined}
+              onclick={() => (activeFilter = item.name)}
             >
-              {chip.label}
-            </button>
+              {item.activeTitle() ?? item.title}
+            </SearchButton>
           {/each}
         </div>
       </div>
-
-      <!-- Filters Expansion Header -->
-      <div class="px-5 py-2.5 flex items-center justify-between border-t border-white/5 bg-neutral-900/30">
-        <button
-          type="button"
-          class="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-white transition-colors cursor-pointer"
-          onclick={() => (showFilters = !showFilters)}
-        >
-          <Icon icon={mdiTune} size="1.1em" />
-          <span>{showFilters ? 'Hide Advanced Filters' : 'Filter by Details (People, Date, Camera, Places)'}</span>
-          <Icon icon={showFilters ? mdiChevronUp : mdiChevronDown} size="1.1em" />
-        </button>
-
-        {#if showFilters}
-          <button
-            type="button"
-            class="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
-            onclick={() => clear()}
-          >
-            {$t('clear_all')}
-          </button>
-        {/if}
-      </div>
-
-      {#if showFilters}
-        <div class="px-5 pt-3">
-          <Text class="pb-3 text-xs" fontWeight="medium" aria-hidden={true}>{$t('filter_by')}</Text>
-          <div class="flex flex-wrap gap-2">
-            {#each filters as item (item.name)}
-              <SearchButton
-                active={activeFilter === item.name || Boolean(item.activeTitle())}
-                leadingIcon={item.icon}
-                class={activeFilter === item.name ? 'border-2' : undefined}
-                onclick={() => (activeFilter = activeFilter === item.name ? undefined : item.name)}
-              >
-                {item.activeTitle() ?? item.title}
-              </SearchButton>
-            {/each}
-          </div>
-        </div>
-
-        {#if activeFilter}
-          <div class="px-5 pt-4">
-            {#if activeFilter === 'type'}
-              <SearchTextSection />
-            {:else if activeFilter === 'people'}
-              <SearchPeopleSection bind:title={peopleTitle} parentPromise={peoplePromise} />
-            {:else if activeFilter === 'date'}
-              <SearchDateSection />
-            {:else if activeFilter === 'places'}
-              <SearchLocationSection />
-            {:else if activeFilter === 'tags'}
-              <SearchTagsSection bind:title={tagsTitle} />
-            {:else if activeFilter === 'media'}
-              <SearchMediaSection />
-            {/if}
-          </div>
-        {/if}
-
-        <div
-          class="grid transition-[grid-template-rows] duration-200 ease-in-out {showAdvanced
-            ? 'grid-rows-[1fr]'
-            : 'grid-rows-[0fr]'}"
-          inert={!showAdvanced}
-        >
-          <div class="overflow-hidden">
-            <div class="my-5 h-px w-full bg-light-200 dark:bg-dark-600"></div>
-            <div class="px-5">
-              <SearchCameraSection />
-              {#if authManager.authenticated && authManager.preferences.ratings.enabled}
-                <SearchRatingsSection />
-              {/if}
-              <SearchDisplaySection />
-            </div>
-          </div>
-        </div>
-
-        <div class="my-4 h-px w-full bg-light-200 dark:bg-dark-600"></div>
-        <div class="flex flex-wrap gap-2 px-5 pb-4">
-          <Button
-            size="small"
-            variant={advancedFiltersSet ? 'outline' : 'ghost'}
-            leadingIcon={mdiTune}
-            trailingIcon={showAdvanced ? mdiChevronUp : mdiChevronDown}
-            onclick={() => (showAdvanced = !showAdvanced)}>{$t('advanced_filters')}</Button
-          >
-          <div class="flex-1"></div>
-          <Button
-            size="small"
-            shape="round"
-            variant="outline"
-            color="secondary"
-            class="bg-transparent"
-            onclick={() => clear()}>{$t('clear_all')}</Button
-          >
-          <Button size="small" shape="round" onclick={() => onSearch()}>{$t('search')}</Button>
+      {#if activeFilter}
+        <div class="px-5 pt-5">
+          {#if activeFilter === 'type'}
+            <SearchTextSection />
+          {:else if activeFilter === 'people'}
+            <SearchPeopleSection bind:title={peopleTitle} parentPromise={peoplePromise} />
+          {:else if activeFilter === 'date'}
+            <SearchDateSection />
+          {:else if activeFilter === 'places'}
+            <SearchLocationSection />
+          {:else if activeFilter === 'tags'}
+            <SearchTagsSection bind:title={tagsTitle} />
+          {:else if activeFilter === 'media'}
+            <SearchMediaSection />
+          {/if}
         </div>
       {/if}
+      <div
+        class="grid transition-[grid-template-rows] duration-200 ease-in-out {showAdvanced
+          ? 'grid-rows-[1fr]'
+          : 'grid-rows-[0fr]'}"
+        inert={!showAdvanced}
+      >
+        <div class="overflow-hidden">
+          <div class="my-5 h-px w-full bg-light-200 dark:bg-dark-600"></div>
+          <div class="px-5">
+            <SearchCameraSection />
+            {#if authManager.authenticated && authManager.preferences.ratings.enabled}
+              <SearchRatingsSection />
+            {/if}
+            <SearchDisplaySection />
+          </div>
+        </div>
+      </div>
+      <div class="my-5 h-px w-full bg-light-200 dark:bg-dark-600"></div>
+      <div class="flex flex-wrap gap-2 px-5 pb-5">
+        <Button
+          size="small"
+          variant={advancedFiltersSet ? 'outline' : 'ghost'}
+          leadingIcon={mdiTune}
+          trailingIcon={showAdvanced ? mdiChevronUp : mdiChevronDown}
+          onclick={() => (showAdvanced = !showAdvanced)}>{$t('advanced_filters')}</Button
+        >
+        <div class="flex-1"></div>
+        <Button
+          size="small"
+          shape="round"
+          variant="outline"
+          color="secondary"
+          class="bg-transparent"
+          onclick={() => clear()}>{$t('clear_all')}</Button
+        >
+        <Button size="small" shape="round" onclick={() => onSearch()}>{$t('search')}</Button>
+      </div>
     </div>
   {/if}
 </div>

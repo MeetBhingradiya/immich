@@ -45,7 +45,6 @@ export const Route = {
 
   // albums
   albums: () => '/albums',
-  autoAlbums: () => '/auto-albums',
   viewAlbum: ({ id }: { id: string }) => `/albums/${id}`,
   viewAlbumAsset: ({ albumId, assetId }: { albumId: string; assetId: string }) =>
     `/albums/${albumId}/photos/${assetId}`,
@@ -72,9 +71,6 @@ export const Route = {
   // map
   map: (point?: { zoom: number; lat: number; lng: number }) =>
     '/map' + (point ? `#${point.zoom}/${point.lat}/${point.lng}` : ''),
-
-  // moments
-  moments: () => '/moments',
 
   // memories
   memories: (params?: { isSaved?: boolean }) => '/memories' + asQueryString(params),
