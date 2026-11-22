@@ -67,20 +67,16 @@
 
   // Dynamic Navigation Items matching feature settings
   const navItems = $derived([
-    ...(authManager.preferences.memories?.enabled && authManager.preferences.memories?.sidebarWeb
-      ? [
-          {
-            id: 'moments',
-            label: 'Moments',
-            href: Route.memories(),
-            icon: mdiCreationOutline,
-            activeIcon: mdiCreation,
-            activeColor: 'text-purple-400',
-            indicatorColor: 'bg-purple-500',
-            isActive: pathname.startsWith('/memories'),
-          },
-        ]
-      : []),
+    {
+      id: 'moments',
+      label: 'Moments',
+      href: Route.moments(),
+      icon: mdiCreationOutline,
+      activeIcon: mdiCreation,
+      activeColor: 'text-purple-400',
+      indicatorColor: 'bg-purple-500',
+      isActive: pathname.startsWith('/moments') || pathname.startsWith('/memories'),
+    },
     {
       id: 'gallery',
       label: 'Gallery',
@@ -171,11 +167,29 @@
 <nav id="dashboard-navbar" class="relative z-50 h-(--navbar-height) w-dvw text-sm max-md:h-(--navbar-height-md) border-b border-white/10 bg-neutral-950/80 backdrop-blur-xl px-6 sm:px-8 select-none">
   <SkipLink text={$t('skip_to_content')} />
   <div class="flex h-full items-center justify-between gap-4">
-    <!-- Left: Just Immich Only -->
+    <!-- Left: Immich Logo + OneDrive-style [ Photos | Folders ] Capsule -->
     <div class="flex items-center gap-3 shrink-0">
       <a data-sveltekit-preload-data="hover" href={Route.photos()} class="flex items-center gap-2 group" title="Immich">
         <Logo variant="inline" class="h-8.5 sm:h-9 max-md:h-7 transition-transform duration-200 group-hover:scale-105" />
       </a>
+
+      <!-- OneDrive-style [ Photos | Folders ] segmented capsule -->
+      <div class="hidden sm:flex items-center p-0.5 rounded-full bg-white/8 border border-white/10 text-xs font-semibold backdrop-blur-md select-none">
+        <a
+          data-sveltekit-preload-data="hover"
+          href={Route.photos()}
+          class="px-3 py-1 rounded-full transition-all duration-200 {pathname !== '/folders' ? 'bg-white text-black font-semibold shadow-xs' : 'text-neutral-400 hover:text-white'}"
+        >
+          Photos
+        </a>
+        <a
+          data-sveltekit-preload-data="hover"
+          href={Route.folders()}
+          class="px-3 py-1 rounded-full transition-all duration-200 {pathname === '/folders' ? 'bg-white text-black font-semibold shadow-xs' : 'text-neutral-400 hover:text-white'}"
+        >
+          Folders
+        </a>
+      </div>
     </div>
 
     <!-- Middle: Dynamic Nav Items with Icons & Labels (Settings-controllable) -->

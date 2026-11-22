@@ -72,7 +72,11 @@
       return { width: 0, height: 0 };
     }
 
-    return scaleToFit(getNaturalSize(assetViewerManager.imgRef), { width: containerWidth, height: containerHeight });
+    const fitContainer = {
+      width: Math.max(0, containerWidth - 24),
+      height: Math.max(0, containerHeight - 32),
+    };
+    return scaleToFit(getNaturalSize(assetViewerManager.imgRef), fitContainer);
   });
 
   const highlightedBoxes = $derived(getBoundingBox(assetViewerManager.highlightedFaces, overlaySize));

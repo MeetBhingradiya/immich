@@ -500,13 +500,13 @@
 
 <section
   id="immich-asset-viewer"
-  class="fixed inset-s-0 top-0 grid size-full grid-cols-4 grid-rows-[64px_1fr] overflow-hidden bg-black"
+  class="fixed inset-s-0 top-0 grid size-full grid-cols-4 {$slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor ? 'grid-rows-[64px_1fr]' : 'grid-rows-1'} overflow-hidden bg-black"
   {@attach focusTrap()}
   bind:this={assetViewerHtmlElement}
 >
   <!-- Top navigation bar -->
   {#if $slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor}
-    <div class="col-span-4 col-start-1 row-span-1 row-start-1 transition-transform">
+    <div class="col-span-4 col-start-1 row-span-1 row-start-1 z-30 transition-transform">
       <AssetViewerNavBar
         {asset}
         {album}
@@ -523,7 +523,7 @@
   {/if}
 
   {#if $slideshowState !== SlideshowState.None}
-    <div class="absolute inset-s-0 top-0 flex w-full justify-start">
+    <div class="absolute inset-s-0 top-0 z-30 flex w-full justify-start">
       <SlideshowBar
         {isFullScreen}
         assetType={previewStackedAsset?.type ?? asset.type}
@@ -536,13 +536,13 @@
   {/if}
 
   {#if $slideshowState === SlideshowState.None && showNavigation && !assetViewerManager.isShowEditor && !assetViewerManager.isFaceEditMode && previousAsset}
-    <div class="col-span-1 col-start-1 row-span-full row-start-1 my-auto justify-self-start">
+    <div class="col-span-1 col-start-1 row-span-full row-start-1 my-auto justify-self-start z-20">
       <PreviousAssetAction onPreviousAsset={() => navigateAsset('previous')} />
     </div>
   {/if}
 
   <!-- Asset Viewer -->
-  <div data-testid="viewer-content" class="relative z-[-1] col-span-4 col-start-1 row-span-full row-start-1">
+  <div data-testid="viewer-content" class="relative z-0 col-span-4 col-start-1 {$slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor ? 'row-start-2 row-span-1' : 'row-start-1 row-span-full'} overflow-hidden">
     {#if viewerKind === 'StackVideoViewer'}
       <VideoViewer
         asset={previewStackedAsset!}
@@ -614,7 +614,7 @@
   </div>
 
   {#if $slideshowState === SlideshowState.None && showNavigation && !assetViewerManager.isShowEditor && !assetViewerManager.isFaceEditMode && nextAsset}
-    <div class="col-span-1 col-start-4 row-span-full row-start-1 my-auto justify-self-end">
+    <div class="col-span-1 col-start-4 row-span-full row-start-1 my-auto justify-self-end z-20">
       <NextAssetAction onNextAsset={() => navigateAsset('next')} />
     </div>
   {/if}

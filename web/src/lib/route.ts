@@ -73,6 +73,9 @@ export const Route = {
   map: (point?: { zoom: number; lat: number; lng: number }) =>
     '/map' + (point ? `#${point.zoom}/${point.lat}/${point.lng}` : ''),
 
+  // moments
+  moments: () => '/moments',
+
   // memories
   memories: (params?: { isSaved?: boolean }) => '/memories' + asQueryString(params),
   viewMemory: ({ id, ...params }: { id: string; assetId?: string; isSaved?: boolean }) =>

@@ -153,7 +153,15 @@
   const { insetInlineStart, top, displayWidth, displayHeight, rasterWidth, rasterHeight, rasterScale } = $derived.by(
     () => {
       const scaleFn = objectFit === 'cover' ? scaleToCover : scaleToFit;
-      const { width, height } = scaleFn(imageDimensions, container);
+      // Provide safe breathing room for contained views so images never touch or clip under bars
+      const fitContainer =
+        objectFit === 'contain'
+          ? {
+              width: Math.max(0, container.width - 24),
+              height: Math.max(0, container.height - 32),
+            }
+          : container;
+      const { width, height } = scaleFn(imageDimensions, fitContainer);
       if (maxRasterPixels === 0) {
         return {
           insetInlineStart: (container.width - width) / 2 + 'px',
