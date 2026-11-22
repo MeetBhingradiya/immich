@@ -1,11 +1,13 @@
 <script lang="ts">
   import { clickOutside } from '#lib/actions/click-outside.ts';
+  import { assetViewerManager } from '#lib/managers/asset-viewer-manager.svelte.ts';
   import { searchManager } from '#lib/managers/search-manager.svelte.ts';
   import { searchStore } from '#lib/stores/search.svelte.ts';
   import { createAlbumAndRedirect } from '#lib/utils/album-utils.ts';
   import { openFileUploadDialog } from '#lib/utils/file-uploader.ts';
-  import { handlePromiseError } from '#lib/utils.ts';
-  import { Icon } from '@immich/ui';
+  import { getAssetMediaUrl, handlePromiseError } from '#lib/utils.ts';
+  import { searchSmart, type AssetResponseDto } from '@immich/sdk';
+  import { Icon, LoadingSpinner } from '@immich/ui';
   import {
     mdiClose,
     mdiFolderOutline,
@@ -27,8 +29,34 @@
   let showSearchModal = $state(false);
   let searchInput = $state<HTMLInputElement>();
   let searchQuery = $state('');
+  let liveResults = $state<AssetResponseDto[]>([]);
+  let isSearchingLive = $state(false);
+  let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined;
 
   let recentTerms = $derived(searchStore.savedSearchTerms || ['windows', 'hi']);
+
+  $effect(() => {
+    const q = searchQuery.trim();
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+
+    if (q.length < 2) {
+      liveResults = [];
+      isSearchingLive = false;
+      return;
+    }
+
+    isSearchingLive = true;
+    searchDebounceTimer = setTimeout(async () => {
+      try {
+        const res = await searchSmart({ smartSearchDto: { query: q } });
+        liveResults = res.slice(0, 6);
+      } catch {
+        liveResults = [];
+      } finally {
+        isSearchingLive = false;
+      }
+    }, 200);
+  });
 
   const handleUploadFiles = () => {
     showUploadDropdown = false;
@@ -84,7 +112,7 @@
   };
 </script>
 
-<!-- Search Popover Modal (OneDrive Screenshot 1 exact match) -->
+<!-- Search Popover Modal (Fluid OneDrive In-Place Search) -->
 {#if showSearchModal}
   <!-- Backdrop -->
   <div
@@ -96,14 +124,52 @@
 
   <!-- Search Card Flyout -->
   <div
-    transition:fly={{ y: 16, duration: 200, easing: cubicOut }}
+    transition:fly={{ y: 20, duration: 240, easing: cubicOut }}
     use:clickOutside={{ onOutclick: closeSearch, onEscape: closeSearch }}
-    class="fixed bottom-20 left-1/2 -translate-x-1/2 z-[9991] w-full max-w-[440px] rounded-3xl border border-white/15 bg-[#1c1c1c]/98 p-5 text-white shadow-[0_24px_64px_rgba(0,0,0,0.9)] backdrop-blur-2xl select-none"
+    class="fixed bottom-20 left-1/2 -translate-x-1/2 z-[9991] w-full max-w-[460px] rounded-3xl border border-white/15 bg-[#1c1c1c]/98 p-5 text-white shadow-[0_24px_64px_rgba(0,0,0,0.9)] backdrop-blur-2xl select-none"
     role="dialog"
     aria-label="Search Photos"
   >
+    <!-- Live Instant Results (Rendered directly in-place without jarring redirect!) -->
+    {#if liveResults.length > 0}
+      <div class="mb-4">
+        <div class="flex items-center justify-between mb-2.5">
+          <span class="text-xs font-semibold text-neutral-300">Quick matches</span>
+          <span class="text-[11px] text-[#0078d4] font-medium">{liveResults.length} photos</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          {#each liveResults as photo (photo.id)}
+            <button
+              type="button"
+              onclick={() => {
+                closeSearch();
+                assetViewerManager.showAsset(photo);
+              }}
+              class="group relative aspect-video rounded-xl overflow-hidden border border-white/10 hover:border-[#0078d4] hover:scale-102 transition-all cursor-pointer bg-neutral-900"
+              title={photo.originalFileName}
+            >
+              <img
+                src={getAssetMediaUrl({ id: photo.id, cacheKey: photo.thumbhash })}
+                alt={photo.originalFileName}
+                class="size-full object-cover group-hover:scale-105 transition-transform duration-200"
+                loading="lazy"
+              />
+              <div class="absolute inset-x-0 bottom-0 bg-black/60 p-1 text-[10px] text-white truncate text-start">
+                {photo.originalFileName}
+              </div>
+            </button>
+          {/each}
+        </div>
+      </div>
+    {:else if isSearchingLive}
+      <div class="flex items-center justify-center py-4 mb-2">
+        <LoadingSpinner size="small" />
+        <span class="ms-2 text-xs text-neutral-400">Searching library...</span>
+      </div>
+    {/if}
+
     <!-- Recent searches -->
-    {#if recentTerms.length > 0}
+    {#if recentTerms.length > 0 && liveResults.length === 0}
       <div class="mb-4">
         <div class="flex items-center justify-between mb-2.5">
           <span class="text-xs font-semibold text-neutral-300">Recent searches</span>
@@ -140,26 +206,28 @@
     {/if}
 
     <!-- Examples (Screenshot 1 exact items) -->
-    <div class="mb-4 pt-3 border-t border-white/10">
-      <p class="text-xs font-semibold text-neutral-300 mb-2">Examples</p>
-      <div class="space-y-1">
-        {#each [
-          'Hiking in the mountains',
-          'Fireworks by the beach',
-          'Field hockey action shot',
-          'Sunset at golden hour'
-        ] as example}
-          <button
-            type="button"
-            class="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-xs text-neutral-300 hover:bg-white/10 hover:text-white text-start transition-colors cursor-pointer"
-            onclick={() => executeSearch(example)}
-          >
-            <span class="text-amber-400 text-sm">💡</span>
-            <span>{example}</span>
-          </button>
-        {/each}
+    {#if liveResults.length === 0}
+      <div class="mb-4 pt-3 border-t border-white/10">
+        <p class="text-xs font-semibold text-neutral-300 mb-2">Examples</p>
+        <div class="space-y-1">
+          {#each [
+            'Hiking in the mountains',
+            'Fireworks by the beach',
+            'Field hockey action shot',
+            'Sunset at golden hour'
+          ] as example}
+            <button
+              type="button"
+              class="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-xs text-neutral-300 hover:bg-white/10 hover:text-white text-start transition-colors cursor-pointer"
+              onclick={() => executeSearch(example)}
+            >
+              <span class="text-amber-400 text-sm">💡</span>
+              <span>{example}</span>
+            </button>
+          {/each}
+        </div>
       </div>
-    </div>
+    {/if}
 
     <!-- Integrated Search Input Row with Close Button -->
     <form onsubmit={handleSearchSubmit} class="relative flex items-center">

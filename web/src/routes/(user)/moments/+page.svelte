@@ -126,7 +126,7 @@
       </h2>
 
       <!-- Atmospheric Ambient Radial Glow (OneDrive exact purple/blue radial gradient) -->
-      <div class="pointer-events-none absolute top-12 left-1/2 -translate-x-1/2 w-[720px] max-w-full h-80 rounded-full blur-3xl opacity-75" style="background: radial-gradient(ellipse 65% 50% at 50% 50%, rgba(0, 120, 212, 0.32) 0%, rgba(119, 25, 170, 0.22) 50%, transparent 75%);"></div>
+      <div class="pointer-events-none absolute top-8 left-1/2 -translate-x-1/2 w-[850px] max-w-full h-96 rounded-full blur-[100px] opacity-85" style="background: radial-gradient(ellipse 65% 50% at 50% 50%, rgba(0, 120, 212, 0.42) 0%, rgba(119, 25, 170, 0.32) 50%, transparent 75%);"></div>
 
       <!-- Fanned 3D Arc Container -->
       <div class="relative flex items-center justify-center gap-2.5 sm:gap-4 py-6 w-full overflow-x-auto no-scrollbar" style="perspective: 1200px;">
@@ -181,6 +181,9 @@
       <!-- Collage Container with Center Reshuffle Button -->
       {#if collagePhotos.length > 0}
         <div class="relative flex items-center justify-center min-h-[340px] w-full max-w-4xl py-6">
+          <!-- Section 2 Ambient Radial Light -->
+          <div class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] max-w-full h-80 rounded-full blur-[90px] opacity-65" style="background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(119, 25, 170, 0.35) 0%, rgba(0, 120, 212, 0.25) 50%, transparent 75%);"></div>
+
           <!-- Circular Collage of Photos -->
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 w-full max-w-3xl">
             {#each collagePhotos as photo, i (photo.id)}

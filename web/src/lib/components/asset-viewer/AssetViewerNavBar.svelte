@@ -103,23 +103,22 @@
 <CommandPaletteDefaultProvider name={$t('assets')} actions={withoutIcons([Close, Cast, ...Object.values(Actions)])} />
 
 <div
-  class="relative isolate flex h-16 place-items-center justify-between px-6 bg-neutral-950/60 backdrop-blur-2xl border-b border-white/10 shadow-2xl transition-transform duration-200"
+  class="relative isolate flex h-14 place-items-center justify-between px-5 bg-[#141414]/90 backdrop-blur-2xl border-b border-white/10 shadow-lg transition-transform duration-200"
 >
-  <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-24 bg-black/50 mask-smoothstep-to-bottom"></div>
   <div class="flex items-center gap-2.5">
     {#if onClose && !assetViewerManager.isFaceEditMode && !assetViewerManager.isEditFacesPanelOpen}
       <button
         type="button"
-        class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-md border border-white/15 transition-all duration-150 active:scale-95 cursor-pointer shadow-xs"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-md border border-white/15 transition-all duration-150 active:scale-95 cursor-pointer shadow-xs"
         onclick={() => onClose?.()}
         title={$t('go_back')}
       >
-        <Icon icon={languageManager.rtl ? mdiArrowRight : mdiArrowLeft} size="16" />
-        <span class="hidden sm:inline">{$t('go_back')}</span>
+        <Icon icon={languageManager.rtl ? mdiArrowRight : mdiArrowLeft} size="15" />
+        <span class="inline">{$t('go_back')}</span>
       </button>
     {/if}
     {#if formattedDate}
-      <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 border border-white/10 text-white/90 font-medium text-xs select-none backdrop-blur-md">
+      <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/6 border border-white/10 text-white/90 font-medium text-xs select-none backdrop-blur-md">
         <Icon icon={mdiCalendarBlankOutline} size="14" class="text-neutral-400" />
         <span>{formattedDate}</span>
       </div>

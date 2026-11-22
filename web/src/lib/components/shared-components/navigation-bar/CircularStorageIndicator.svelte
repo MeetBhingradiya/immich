@@ -1,5 +1,6 @@
 <script lang="ts">
   import { clickOutside } from '#lib/actions/click-outside.ts';
+  import { portal } from '#lib/elements/Portal.svelte';
   import { authManager } from '#lib/managers/auth-manager.svelte.ts';
   import { getStorageQuery } from '#lib/queries/server-info.query.ts';
   import { Route } from '#lib/route.ts';
@@ -80,57 +81,68 @@
     </span>
   </button>
 
-  <!-- Google Photos Style Storage Popover -->
+  <!-- Google Photos / OneDrive Style Storage Popover (Teleported to body, z-[99999]) -->
   {#if showPopover}
-    <div
-      transition:scale={{ start: 0.95, duration: 180 }}
-      class="absolute right-0 top-12 z-50 w-72 rounded-3xl border border-white/15 bg-neutral-900/95 p-5 text-white shadow-2xl backdrop-blur-2xl"
-      role="dialog"
-      aria-label="Storage Info"
-    >
-      <div class="mb-3 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <Icon icon={mdiHarddisk} size="18px" class="text-blue-400" />
-          <h4 class="text-xs font-semibold tracking-tight text-neutral-200">Account Storage</h4>
-        </div>
-        <span class="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400 border border-blue-500/20">
-          {percentage}%
-        </span>
-      </div>
+    <div {@attach portal('body')}>
+      <!-- Backdrop -->
+      <div
+        transition:fade={{ duration: 120 }}
+        class="fixed inset-0 z-[99998] bg-black/40 backdrop-blur-xs"
+        onclick={() => (showPopover = false)}
+        role="presentation"
+      ></div>
 
-      <div class="mb-2">
-        <p class="text-base font-bold tracking-tight text-white">
-          {getByteUnitString(usedBytes, $locale, 2)}
-          <span class="text-xs font-normal text-neutral-400">of {getByteUnitString(availableBytes, $locale, 2)}</span>
-        </p>
-      </div>
-
-      <!-- Linear progress bar -->
-      <div class="mb-4 h-2 w-full overflow-hidden rounded-full bg-neutral-800">
-        <div
-          class="h-full rounded-full transition-all duration-500"
-          style="width: {percentage}%; background-color: {ringColor};"
-        ></div>
-      </div>
-
-      <div class="space-y-2 border-t border-white/10 pt-3 text-[11px] text-neutral-400">
-        <div class="flex items-center justify-between">
-          <span class="flex items-center gap-1.5">
-            <Icon icon={mdiServerNetwork} size="14px" class="text-emerald-400" />
-            Private High-Speed Pool
+      <div
+        in:scale={{ start: 0.96, duration: 160 }}
+        out:fade={{ duration: 100 }}
+        class="fixed top-15 right-24 sm:right-28 z-[99999] w-76 rounded-2xl border border-white/15 bg-[#1e1e1e] p-5 text-white shadow-[0_24px_64px_rgba(0,0,0,0.9)] select-none"
+        role="dialog"
+        aria-label="Storage Info"
+      >
+        <div class="mb-3.5 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <Icon icon={mdiHarddisk} size="18px" class="text-blue-400" />
+            <h4 class="text-xs font-semibold tracking-tight text-neutral-200">Account Storage</h4>
+          </div>
+          <span class="rounded-full bg-blue-500/15 px-2.5 py-0.5 text-[10px] font-semibold text-blue-400 border border-blue-500/20">
+            {percentage}%
           </span>
-          <span class="font-medium text-emerald-400">Active</span>
         </div>
-      </div>
 
-      <div class="mt-4 flex justify-end">
-        <a
-          href={Route.userSettings()}
-          onclick={() => (showPopover = false)}
-          class="text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
-        >
-          Manage storage →
-        </a>
+        <div class="mb-2.5">
+          <p class="text-base font-bold tracking-tight text-white">
+            {getByteUnitString(usedBytes, $locale, 2)}
+            <span class="text-xs font-normal text-neutral-400">of {getByteUnitString(availableBytes, $locale, 2)}</span>
+          </p>
+        </div>
+
+        <!-- Linear progress bar -->
+        <div class="mb-4 h-2 w-full overflow-hidden rounded-full bg-neutral-800">
+          <div
+            class="h-full rounded-full transition-all duration-500"
+            style="width: {percentage}%; background-color: {ringColor};"
+          ></div>
+        </div>
+
+        <div class="space-y-2 border-t border-white/10 pt-3 text-[11px] text-neutral-400">
+          <div class="flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <Icon icon={mdiServerNetwork} size="14px" class="text-emerald-400" />
+              Private High-Speed Pool
+            </span>
+            <span class="font-medium text-emerald-400">Active</span>
+          </div>
+        </div>
+
+        <div class="mt-4 flex justify-end">
+          <a
+            href={Route.userSettings()}
+            onclick={() => (showPopover = false)}
+            class="text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            Manage storage →
+          </a>
+        </div>
       </div>
     </div>
   {/if}

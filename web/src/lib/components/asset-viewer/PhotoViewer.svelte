@@ -246,6 +246,14 @@
     bind:ref={adaptiveImage}
   >
     {#snippet backdrop()}
+      <!-- OneDrive Atmospheric Ambient Lighting behind photo -->
+      {#if asset.thumbhash}
+        <div class="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden -z-10 select-none">
+          <div class="w-[85vw] h-[85vh] rounded-full blur-[100px] opacity-25 scale-110 pointer-events-none transition-all duration-700 ease-out">
+            <Thumbhash base64ThumbHash={asset.thumbhash} class="size-full object-cover scale-150" />
+          </div>
+        </div>
+      {/if}
       {#if blurredSlideshow}
         <Thumbhash base64ThumbHash={asset.thumbhash!} class="absolute inset-s-0 top-0 left-0 h-dvh w-dvw" />
       {/if}

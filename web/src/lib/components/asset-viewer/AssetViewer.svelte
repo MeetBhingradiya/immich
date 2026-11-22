@@ -500,7 +500,7 @@
 
 <section
   id="immich-asset-viewer"
-  class="fixed inset-s-0 top-0 grid size-full grid-cols-4 {$slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor ? 'grid-rows-[64px_1fr]' : 'grid-rows-1'} overflow-hidden bg-black"
+  class="fixed inset-0 z-[10000] grid size-full grid-cols-4 {$slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor ? 'grid-rows-[56px_1fr]' : 'grid-rows-1'} overflow-hidden bg-[#0c0c0c]"
   {@attach focusTrap()}
   bind:this={assetViewerHtmlElement}
 >

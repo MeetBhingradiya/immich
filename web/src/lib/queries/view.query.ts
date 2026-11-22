@@ -12,6 +12,8 @@ export const getUniqueOriginalPathsQuery = () =>
   queryOptions({
     queryKey: ['view', 'folder', 'unique-paths'],
     queryFn: ({ signal }) => getUniqueOriginalPaths({ signal }),
+    retry: 2,
+    staleTime: 60000,
   });
 
 export const getFolderTreeQuery = () =>
@@ -24,4 +26,6 @@ export const getAssetsByOriginalPathQuery = (path: string) =>
   queryOptions({
     queryKey: ['view', 'folder', 'assets', path],
     queryFn: ({ signal }) => getAssetsByOriginalPath({ path }, { signal }),
+    retry: 2,
+    staleTime: 60000,
   });

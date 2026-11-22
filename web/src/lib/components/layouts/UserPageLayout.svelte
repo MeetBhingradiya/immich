@@ -6,6 +6,7 @@
   import NavigationBar from '#lib/components/shared-components/navigation-bar/NavigationBar.svelte';
   import OneDriveFloatingAction from '#lib/components/shared-components/OneDriveFloatingAction.svelte';
   import type { HeaderButtonActionItem } from '#lib/types.ts';
+  import { assetViewerManager } from '#lib/managers/asset-viewer-manager.svelte.ts';
   import { openFileUploadDialog } from '#lib/utils/file-uploader.ts';
   import { Button, ContextMenuButton, HStack, isMenuItemType, type MenuItemType } from '@immich/ui';
   import type { Snippet } from 'svelte';
@@ -46,7 +47,7 @@
 </script>
 
 <header class="relative z-[9900]">
-  {#if !hideNavbar}
+  {#if !hideNavbar && !page.params.assetId && !assetViewerManager.isOpen}
     <NavigationBar onUploadClick={() => openFileUploadDialog()} />
   {/if}
 </header>
@@ -105,6 +106,6 @@
 </div>
 
 <!-- OneDrive Floating Bottom Action Capsule (Upload / New Album / Search) -->
-{#if !page.url.pathname.includes('/admin')}
+{#if !page.url.pathname.includes('/admin') && !page.params.assetId && !assetViewerManager.isOpen}
   <OneDriveFloatingAction onUploadClick={() => openFileUploadDialog()} />
 {/if}
