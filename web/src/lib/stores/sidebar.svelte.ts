@@ -11,7 +11,7 @@ const STORAGE_KEY_MODE = 'immich_sidebar_mode';
 const STORAGE_KEY_WIDTH = 'immich_sidebar_width';
 
 class SidebarStore {
-  private _mode = $state<SidebarMode>('expanded');
+  private _mode = $state<SidebarMode>('hidden');
   private _width = $state<number>(DEFAULT_SIDEBAR_WIDTH);
   private _mobileOpen = $state<boolean>(false);
 
@@ -19,7 +19,7 @@ class SidebarStore {
     if (typeof window !== 'undefined') {
       const savedMode = localStorage.getItem(STORAGE_KEY_MODE) as SidebarMode | null;
       if (savedMode === 'expanded' || savedMode === 'collapsed' || savedMode === 'hidden') {
-        this._mode = savedMode;
+        this._mode = 'hidden';
       }
       const savedWidth = localStorage.getItem(STORAGE_KEY_WIDTH);
       if (savedWidth) {

@@ -4,14 +4,13 @@
 
 <script lang="ts">
   import NavigationBar from '#lib/components/shared-components/navigation-bar/NavigationBar.svelte';
-  import UserSidebar from '#lib/components/shared-components/side-bar/UserSidebar.svelte';
-  import { mediaQueryManager } from '#lib/stores/media-query-manager.svelte.ts';
-  import { sidebarStore } from '#lib/stores/sidebar.svelte.ts';
+  import OneDriveFloatingAction from '#lib/components/shared-components/OneDriveFloatingAction.svelte';
   import type { HeaderButtonActionItem } from '#lib/types.ts';
   import { openFileUploadDialog } from '#lib/utils/file-uploader.ts';
   import { Button, ContextMenuButton, HStack, isMenuItemType, type MenuItemType } from '@immich/ui';
   import type { Snippet } from 'svelte';
   import { t } from 'svelte-i18n';
+  import { page } from '$app/state';
 
   interface Props {
     hideNavbar?: boolean;
@@ -53,31 +52,28 @@
 </header>
 <div
   tabindex="-1"
-  style={mediaQueryManager.isFullSidebar ? `grid-template-columns: ${sidebarStore.currentWidthPx}px 1fr;` : undefined}
-  class="relative z-0 grid grid-cols-[--spacing(0)_auto] overflow-hidden transition-[grid-template-columns] duration-150
+  class="relative z-0 flex w-full overflow-hidden
     {hideNavbar ? 'h-dvh' : 'h-[calc(100dvh-var(--navbar-height))] max-md:h-[calc(100dvh-var(--navbar-height-md))]'}
     {hideNavbar ? 'pt-(--navbar-height)' : ''}
     {hideNavbar ? 'max-md:pt-(--navbar-height-md)' : ''}"
 >
   {#if sidebar}
     {@render sidebar()}
-  {:else}
-    <UserSidebar />
   {/if}
 
-  <main class="relative">
-    <div class="{scrollbarClass} absolute {hasTitleClass} w-full overflow-y-auto p-2" {...rest}>
+  <main class="relative h-full w-full flex-1 overflow-hidden">
+    <div class="{scrollbarClass} absolute {hasTitleClass} w-full overflow-y-auto" {...rest}>
       {@render children?.()}
     </div>
 
     {#if title || buttons}
-      <div class="absolute flex h-16 w-full place-items-center justify-between border-b p-2 text-dark">
+      <div class="absolute flex h-16 w-full place-items-center justify-between border-b border-white/10 p-2 text-dark bg-neutral-900/60 backdrop-blur-md">
         <div class="flex items-center gap-2">
           {#if title}
-            <div class="pe-8 outline-none" tabindex="-1" id={headerId}>{title}</div>
+            <div class="pe-8 outline-none text-base font-bold text-white" tabindex="-1" id={headerId}>{title}</div>
           {/if}
           {#if description}
-            <p class="text-sm text-gray-400 dark:text-gray-600">{description}</p>
+            <p class="text-sm text-neutral-400">{description}</p>
           {/if}
         </div>
 
@@ -107,3 +103,8 @@
     {/if}
   </main>
 </div>
+
+<!-- OneDrive Floating Bottom Action Capsule (Upload / New Album / Search) -->
+{#if !page.url.pathname.includes('/admin')}
+  <OneDriveFloatingAction onUploadClick={() => openFileUploadDialog()} />
+{/if}
