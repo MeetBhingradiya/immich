@@ -19,7 +19,7 @@
 }
 
 @theme {
-  --font-sans: 'GoogleSans', sans-serif;
+  --font-sans: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
   --font-mono: 'GoogleSansCode', monospace;
 
   --color-logo-red: #fa2921;
@@ -93,11 +93,11 @@
     --immich-bg: 255 255 255;
     --immich-fg: 0 0 0;
 
-    /* dark */
-    --immich-dark-primary: 172 203 250;
-    --immich-dark-bg: 10 10 10;
-    --immich-dark-fg: 229 231 235;
-    --immich-dark-gray: 33 33 33;
+    /* dark (OneDrive Fluent Dark Palette) */
+    --immich-dark-primary: 0 120 212;
+    --immich-dark-bg: 20 20 20;
+    --immich-dark-fg: 245 245 245;
+    --immich-dark-gray: 36 36 36;
   }
 
   button:not(:disabled),

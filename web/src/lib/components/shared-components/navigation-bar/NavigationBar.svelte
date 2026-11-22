@@ -192,38 +192,38 @@
       </div>
     </div>
 
-    <!-- Middle: Dynamic Nav Items with Icons & Labels (Settings-controllable) -->
-    <div class="flex items-center justify-center gap-1 sm:gap-2 lg:gap-3 h-full">
+    <!-- Middle: Dynamic Nav Items with Icons & Labels (OneDrive-style) -->
+    <div class="flex items-center justify-center gap-0.5 sm:gap-1 lg:gap-2 h-full">
       {#each navItems as item (item.id)}
         <a
           data-sveltekit-preload-data="hover"
           href={item.href}
-          class="relative flex flex-col items-center justify-center h-12 my-auto px-3.5 sm:px-4 rounded-2xl transition-all duration-200 ease-out select-none group
+          class="relative flex flex-col items-center justify-center h-12 my-auto px-3 sm:px-4 rounded-xl transition-all duration-150 ease-out select-none group
             {item.isActive 
-              ? 'bg-white/12 text-white shadow-xs font-semibold' 
-              : 'text-neutral-400 hover:text-white hover:bg-white/6 font-medium'}"
+              ? 'text-white font-semibold' 
+              : 'text-[#cccccc] hover:text-white hover:bg-white/5 font-normal'}"
           title={item.label}
         >
-          <div class="flex items-center justify-center transition-all duration-200 group-hover:scale-110">
+          <div class="flex items-center justify-center transition-transform duration-150 group-hover:scale-105">
             <Icon
               icon={item.isActive ? item.activeIcon : item.icon}
-              size="22px"
-              class="transition-colors duration-200 {item.isActive ? item.activeColor : ''}"
+              size="20px"
+              class="transition-colors duration-150 {item.isActive ? 'text-[#0078d4]' : 'text-neutral-400 group-hover:text-white'}"
             />
           </div>
 
           {#if !$hideTopNavLabels}
-            <span class="text-[11px] mt-0.5 tracking-tight transition-colors duration-200">
+            <span class="text-[11px] mt-0.5 tracking-tight transition-colors duration-150 {item.isActive ? 'text-white font-semibold' : 'text-[#a19f9d] group-hover:text-white'}">
               {item.label}
             </span>
           {/if}
 
-          <!-- Active Page Indicator: Smooth glowing bottom accent bar -->
+          <!-- Active Page Indicator: OneDrive Blue Accent Bottom Bar -->
           {#if item.isActive}
             <span
-              in:fade={{ duration: 200 }}
-              out:fade={{ duration: 150 }}
-              class="absolute bottom-1 inset-x-2.5 h-[2.5px] rounded-full {item.indicatorColor} shadow-[0_0_8px_currentColor] transition-all duration-300"
+              in:fade={{ duration: 150 }}
+              out:fade={{ duration: 100 }}
+              class="absolute bottom-0 inset-x-2 h-[2.5px] rounded-full bg-[#0078d4] shadow-[0_0_8px_rgba(0,120,212,0.8)] transition-all duration-200"
             ></span>
           {/if}
         </a>

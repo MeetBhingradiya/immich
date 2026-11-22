@@ -56,13 +56,13 @@
     await memoryManager.applyPreferences();
   };
 
-  // Card transform styles for 5 fanned-out 3D cards
+  // Card transform styles for 5 fanned-out 3D cards (OneDrive exact specifications)
   const CARD_STYLES = [
-    { rotate: '-9deg', translateY: '22px', scale: '0.90', zIndex: '10' },
-    { rotate: '-4.5deg', translateY: '9px', scale: '0.96', zIndex: '20' },
-    { rotate: '0deg', translateY: '0px', scale: '1.04', zIndex: '30' },
-    { rotate: '4.5deg', translateY: '9px', scale: '0.96', zIndex: '20' },
-    { rotate: '9deg', translateY: '22px', scale: '0.90', zIndex: '10' },
+    { rotate: '-6deg', translateY: '24px', scale: '0.85', zIndex: '8' },
+    { rotate: '-4deg', translateY: '12px', scale: '0.92', zIndex: '9' },
+    { rotate: '0deg', translateY: '0px', scale: '1.0', zIndex: '10' },
+    { rotate: '4deg', translateY: '12px', scale: '0.92', zIndex: '9' },
+    { rotate: '6deg', translateY: '24px', scale: '0.85', zIndex: '8' },
   ];
 </script>
 
@@ -73,10 +73,10 @@
         type="button"
         onclick={loadFeaturedPhotos}
         disabled={isShuffling}
-        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 hover:bg-white/15 text-white/90 text-xs font-medium border border-white/10 backdrop-blur-md transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 hover:bg-white/15 text-white/90 text-xs font-semibold border border-white/10 backdrop-blur-md transition-all active:scale-95 cursor-pointer disabled:opacity-50"
         title="Reshuffle featured photos"
       >
-        <Icon icon={mdiRefresh} size="15" class={isShuffling ? 'animate-spin text-purple-400' : 'text-neutral-400'} />
+        <Icon icon={mdiRefresh} size="15" class={isShuffling ? 'animate-spin text-[#0078d4]' : 'text-neutral-400'} />
         <span>Reshuffle</span>
       </button>
 
@@ -92,25 +92,25 @@
     </div>
   {/snippet}
 
-  <div class="flex flex-col items-center w-full max-w-6xl mx-auto px-4 pt-6 pb-28 select-none">
+  <div class="flex flex-col items-center w-full max-w-6xl mx-auto px-4 pt-4 pb-28 select-none">
     <!-- SECTION 1: Today's Featured Photos (OneDrive 3D Fanned Arc Cards) -->
-    <div class="relative flex flex-col items-center w-full mb-16">
-      <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-8 text-center drop-shadow-sm">
+    <div class="relative flex flex-col items-center w-full mb-14">
+      <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-6 text-center drop-shadow-sm font-['Bahnschrift','Segoe_UI',sans-serif]">
         Today's featured photos
       </h2>
 
-      <!-- Subtle Luminous Radial Backdrop Glow -->
-      <div class="pointer-events-none absolute top-12 left-1/2 -translate-x-1/2 w-96 h-64 bg-radial from-purple-600/30 via-sky-500/20 to-transparent blur-3xl rounded-full"></div>
+      <!-- Atmospheric Ambient Radial Glow (OneDrive exact formula) -->
+      <div class="pointer-events-none absolute top-8 left-1/2 -translate-x-1/2 w-[650px] h-80 rounded-full blur-3xl opacity-80" style="background: radial-gradient(ellipse 55% 45% at 50% 50%, rgba(0, 120, 212, 0.30) 0%, rgba(119, 25, 170, 0.18) 50%, transparent 75%);"></div>
 
       <!-- Fanned 3D Cards Container -->
-      <div class="relative flex items-center justify-center gap-2 sm:gap-3 py-4 w-full overflow-x-auto no-scrollbar" style="perspective: 1200px;">
+      <div class="relative flex items-center justify-center gap-2 sm:gap-3 py-6 w-full overflow-x-auto no-scrollbar" style="perspective: 1200px;">
         {#if featuredPhotos.length > 0}
           {#each featuredPhotos as photo, i (photo.id)}
             {@const style = CARD_STYLES[i] ?? CARD_STYLES[2]}
             <button
               type="button"
               onclick={() => assetViewerManager.showAsset(photo)}
-              class="group relative size-44 sm:size-52 md:size-60 shrink-0 rounded-3xl overflow-hidden border border-white/20 bg-neutral-900 shadow-2xl transition-all duration-300 ease-out cursor-pointer hover:!scale-110 hover:!rotate-0 hover:!translate-y-0 hover:z-40 hover:shadow-cyan-500/30 hover:border-white/40 focus:outline-none"
+              class="group relative w-48 h-56 sm:w-56 sm:h-64 md:w-64 md:h-72 shrink-0 rounded-2xl overflow-hidden border border-white/20 bg-neutral-900 shadow-[0_16px_36px_rgba(0,0,0,0.55),0_4px_12px_rgba(0,0,0,0.3)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer hover:!scale-104 hover:!rotate-0 hover:!translate-y-0 hover:!z-30 hover:border-white/40 hover:shadow-[0_20px_48px_rgba(0,120,212,0.4)] focus:outline-none"
               style="transform: rotate({style.rotate}) translateY({style.translateY}) scale({style.scale}); z-index: {style.zIndex};"
             >
               <img
@@ -119,7 +119,7 @@
                 class="size-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
-              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
                 <span class="text-xs font-semibold text-white truncate drop-shadow-md">
                   {photo.originalFileName}
                 </span>
@@ -127,7 +127,7 @@
             </button>
           {/each}
         {:else if isShuffling}
-          <div class="flex items-center justify-center h-52">
+          <div class="flex items-center justify-center h-64">
             <LoadingSpinner size="giant" />
           </div>
         {:else}
@@ -135,7 +135,7 @@
           {#each [1, 2, 3, 4, 5] as idx, i}
             {@const style = CARD_STYLES[i]}
             <div
-              class="relative size-44 sm:size-52 md:size-60 shrink-0 rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-neutral-800 to-neutral-900 shadow-xl"
+              class="relative w-48 h-56 sm:w-56 sm:h-64 md:w-64 md:h-72 shrink-0 rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-neutral-800 to-neutral-900 shadow-xl"
               style="transform: rotate({style.rotate}) translateY({style.translateY}) scale({style.scale}); z-index: {style.zIndex};"
             >
               <div class="flex size-full items-center justify-center text-white/30">

@@ -197,15 +197,15 @@
   use:clickOutside={{ onOutclick: () => { isExpanded = false; showUploadDropdown = false; } }}
 >
   {#if !isExpanded}
-    <!-- Collapsed State: [ (+) | 🔍 Search your photos ] / [ (+) | 🔍 ] -->
+    <!-- Collapsed State: [ (+) | 🔍 Search your photos ] (OneDrive exact 44px capsule) -->
     <div
       transition:scale={{ start: 0.9, duration: 180, easing: cubicOut }}
-      class="flex items-center gap-1.5 rounded-full border border-white/15 bg-neutral-900/90 p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
+      class="flex items-center gap-2 rounded-full border border-white/15 bg-[#1e1e1e]/95 p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.65)] backdrop-blur-2xl"
     >
       <button
         type="button"
         onclick={() => (isExpanded = true)}
-        class="flex size-9 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer"
+        class="flex size-10 items-center justify-center rounded-full bg-[#7719aa] hover:bg-[#8e24aa] text-white shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer"
         title="Create & Upload"
         aria-label="Create & Upload"
       >
@@ -215,12 +215,12 @@
       <button
         type="button"
         onclick={openSearch}
-        class="flex items-center gap-2 rounded-full px-3 py-1.5 text-neutral-300 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
+        class="flex items-center gap-2.5 h-10 px-4 rounded-full bg-white/5 border border-white/10 text-neutral-300 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
         title="Search Photos"
         aria-label="Search Photos"
       >
-        <Icon icon={mdiMagnify} size="18px" />
-        <span class="hidden sm:inline text-xs font-medium text-neutral-300">Search your photos</span>
+        <Icon icon={mdiMagnify} size="18px" class="text-neutral-400" />
+        <span class="text-xs font-medium text-neutral-300">Search your photos</span>
       </button>
     </div>
   {:else}
