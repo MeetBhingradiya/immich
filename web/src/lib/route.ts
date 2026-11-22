@@ -45,6 +45,7 @@ export const Route = {
 
   // albums
   albums: () => '/albums',
+  autoAlbums: () => '/auto-albums',
   viewAlbum: ({ id }: { id: string }) => `/albums/${id}`,
   viewAlbumAsset: ({ albumId, assetId }: { albumId: string; assetId: string }) =>
     `/albums/${albumId}/photos/${assetId}`,

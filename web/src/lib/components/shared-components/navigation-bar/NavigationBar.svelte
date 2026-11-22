@@ -45,11 +45,9 @@
 <nav id="dashboard-navbar" class="h-(--navbar-height) w-dvw text-sm max-md:h-(--navbar-height-md)">
   <SkipLink text={$t('skip_to_content')} />
   <div
-    class="grid h-full grid-cols-[--spacing(32)_auto] items-center py-2 sidebar:grid-cols-[--spacing(64)_auto] {noBorder
-      ? ''
-      : 'border-b'}"
+    class="flex h-full items-center justify-between py-2 px-3 gap-3 {noBorder ? '' : 'border-b'}"
   >
-    <div class="mx-4 flex flex-row items-center gap-1">
+    <div class="flex flex-row items-center gap-2 shrink-0">
       <IconButton
         id={menuButtonId}
         shape="round"
@@ -57,23 +55,23 @@
         variant="ghost"
         size="medium"
         aria-label={$t('main_menu')}
+        title={mediaQueryManager.isFullSidebar ? (sidebarStore.isCollapsed ? 'Expand sidebar' : 'Collapse sidebar') : $t('main_menu')}
         icon={mdiMenu}
         onclick={() => {
           sidebarStore.toggle();
         }}
         onmousedown={(event: MouseEvent) => {
-          if (sidebarStore.isOpen) {
-            // stops event from reaching the default handler when clicking outside of the sidebar
+          if (sidebarStore.isOpen && !mediaQueryManager.isFullSidebar) {
+            // stops event from reaching the default handler when clicking outside of the sidebar on mobile
             event.stopPropagation();
           }
         }}
-        class="sidebar:hidden"
       />
-      <a data-sveltekit-preload-data="hover" href={Route.photos()}>
-        <Logo variant={mediaQueryManager.isFullSidebar ? 'inline' : 'icon'} class="max-md:h-12" />
+      <a data-sveltekit-preload-data="hover" href={Route.photos()} class="flex items-center">
+        <Logo variant={mediaQueryManager.isFullSidebar ? (sidebarStore.isCollapsed ? 'icon' : 'inline') : 'icon'} class="max-md:h-12" />
       </a>
     </div>
-    <div class="flex justify-between gap-4 pe-6 lg:gap-8">
+    <div class="flex flex-1 items-center justify-between gap-4 pe-2 lg:gap-8 max-w-5xl">
       <div class="hidden w-full max-w-5xl flex-1 sm:block tall:ps-0">
         <SearchBar grayTheme={true} />
       </div>

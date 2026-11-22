@@ -5,6 +5,8 @@
 <script lang="ts">
   import NavigationBar from '#lib/components/shared-components/navigation-bar/NavigationBar.svelte';
   import UserSidebar from '#lib/components/shared-components/side-bar/UserSidebar.svelte';
+  import { mediaQueryManager } from '#lib/stores/media-query-manager.svelte.ts';
+  import { sidebarStore } from '#lib/stores/sidebar.svelte.ts';
   import type { HeaderButtonActionItem } from '#lib/types.ts';
   import { openFileUploadDialog } from '#lib/utils/file-uploader.ts';
   import { Button, ContextMenuButton, HStack, isMenuItemType, type MenuItemType } from '@immich/ui';
@@ -51,7 +53,8 @@
 </header>
 <div
   tabindex="-1"
-  class="relative z-0 grid grid-cols-[--spacing(0)_auto] overflow-hidden sidebar:grid-cols-[--spacing(64)_auto]
+  style={mediaQueryManager.isFullSidebar ? `grid-template-columns: ${sidebarStore.currentWidthPx}px 1fr;` : undefined}
+  class="relative z-0 grid grid-cols-[--spacing(0)_auto] overflow-hidden transition-[grid-template-columns] duration-150
     {hideNavbar ? 'h-dvh' : 'h-[calc(100dvh-var(--navbar-height))] max-md:h-[calc(100dvh-var(--navbar-height-md))]'}
     {hideNavbar ? 'pt-(--navbar-height)' : ''}
     {hideNavbar ? 'max-md:pt-(--navbar-height-md)' : ''}"
