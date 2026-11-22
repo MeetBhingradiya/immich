@@ -26,8 +26,15 @@
     type PersonResponseDto,
     type StackResponseDto,
   } from '@immich/sdk';
-  import { ActionButton, CommandPaletteDefaultProvider, Tooltip, type ActionItem } from '@immich/ui';
-  import { mdiArrowLeft, mdiArrowRight, mdiDotsVertical, mdiVideoOutline } from '@mdi/js';
+  import { ActionButton, CommandPaletteDefaultProvider, Icon, Tooltip, type ActionItem } from '@immich/ui';
+  import {
+    mdiArrowLeft,
+    mdiArrowRight,
+    mdiCalendarBlankOutline,
+    mdiCrop,
+    mdiDotsHorizontal,
+    mdiVideoOutline,
+  } from '@mdi/js';
   import { t } from 'svelte-i18n';
 
   interface Props {
@@ -79,16 +86,36 @@
   const Actions = $derived(getAssetActions($t, { ...asset, stackPrimaryAssetId: stack?.primaryAssetId }, album));
   const StackActions = $derived(getStackActions($t, stack, asset));
   const sharedLink = getSharedLink();
+
+  const formattedDate = $derived.by(() => {
+    const raw = asset.localDateTime || asset.fileCreatedAt;
+    if (!raw) return '';
+    try {
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch {
+      return '';
+    }
+  });
 </script>
 
 <CommandPaletteDefaultProvider name={$t('assets')} actions={withoutIcons([Close, Cast, ...Object.values(Actions)])} />
 
 <div
-  class="relative isolate flex h-16 place-items-center justify-between px-3 drop-shadow-[0_0_1px_rgba(0,0,0,0.4)] transition-transform duration-200"
+  class="relative isolate flex h-16 place-items-center justify-between px-4 bg-neutral-950/40 backdrop-blur-xl border-b border-white/5 drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-transform duration-200"
 >
   <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-24 bg-black/40 mask-smoothstep-to-bottom"></div>
-  <div class="dark">
-    <ActionButton action={Close} />
+  <div class="flex items-center gap-2">
+    <div class="dark">
+      <ActionButton action={Close} />
+    </div>
+    {#if formattedDate}
+      <div class="flex items-center gap-1.5 text-white/90 font-medium text-sm select-none ps-1">
+        <Icon icon={mdiCalendarBlankOutline} size="16" class="text-neutral-400" />
+        <span>{formattedDate}</span>
+      </div>
+    {/if}
   </div>
 
   <div
@@ -104,6 +131,20 @@
         {/snippet}
       </Tooltip>
     {/if}
+
+    <!-- OneDrive-style prominent Edit Pill -->
+    {#if Actions.Edit && (Actions.Edit.$if?.() ?? true)}
+      <button
+        type="button"
+        class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/12 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-md border border-white/15 transition-all duration-200 active:scale-95 cursor-pointer shadow-xs me-1"
+        onclick={() => Actions.Edit.onAction?.()}
+        title={$t('edit')}
+      >
+        <Icon icon={mdiCrop} size="15" />
+        <span>{$t('edit')}</span>
+      </button>
+    {/if}
+
     <ActionButton action={Cast} />
     <ActionButton action={Actions.Share} />
     <ActionButton action={Actions.Offline} />
@@ -116,14 +157,13 @@
     <ActionButton action={Actions.Info} />
     <ActionButton action={Actions.Favorite} />
     <ActionButton action={Actions.Unfavorite} />
-    <ActionButton action={Actions.Edit} />
 
     {#if isOwner}
       <DeleteAction {asset} {onAction} {preAction} {onUndoDelete} />
     {/if}
 
     {#if !sharedLink}
-      <ButtonContextMenu direction="left" align="top-right" color="secondary" title={$t('more')} icon={mdiDotsVertical}>
+      <ButtonContextMenu direction="left" align="top-right" color="secondary" title={$t('more')} icon={mdiDotsHorizontal}>
         <ActionMenuItem action={Actions.PlaySlideshow} />
 
         <ActionMenuItem action={Actions.Download} />

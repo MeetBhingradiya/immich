@@ -15,7 +15,12 @@ export class ViewRepository {
   async getUniqueOriginalPaths(userId: string) {
     const results = await this.db
       .selectFrom('asset')
-      .select((eb) => eb.fn<string>('substring', ['asset.originalPath', eb.val('^(.*/)[^/]*$')]).as('directoryPath'))
+      .select((eb) =>
+        eb.fn<string>('substring', [
+          eb.fn('replace', ['asset.originalPath', eb.val('\\'), eb.val('/')]),
+          eb.val('^(.*/)[^/]*$'),
+        ]).as('directoryPath'),
+      )
       .distinct()
       .where('ownerId', '=', asUuid(userId))
       .where('visibility', '=', AssetVisibility.Timeline)
@@ -26,13 +31,17 @@ export class ViewRepository {
       .orderBy('directoryPath', 'asc')
       .execute();
 
-    return results.map((row) => row.directoryPath.replaceAll(/\/$/g, ''));
+    return results
+      .map((row) => row.directoryPath?.replace(/\/$/g, ''))
+      .filter((path): path is string => Boolean(path));
   }
 
   @GenerateSql({ params: [DummyValue.UUID, DummyValue.STRING] })
   async getAssetsByOriginalPath(userId: string, partialPath: string) {
-    const directory = trim(partialPath, '/');
-    const prefix = escapeLikePattern(directory ? `/${directory}/` : '/');
+    const normalizedDir = (partialPath || '').replaceAll('\\', '/').replace(/\/+$/, '');
+    const cleanDir =
+      normalizedDir.includes(':') || normalizedDir.startsWith('/') ? normalizedDir : `/${normalizedDir}`;
+    const prefix = escapeLikePattern(cleanDir ? `${cleanDir}/` : '/');
 
     return this.db
       .selectFrom('asset')
@@ -44,10 +53,23 @@ export class ViewRepository {
       .where('fileCreatedAt', 'is not', null)
       .where('fileModifiedAt', 'is not', null)
       .where('localDateTime', 'is not', null)
-      .where('originalPath', 'like', `${prefix}%`)
-      .where('originalPath', 'not like', `${prefix}%/%`)
+      .where(
+        (eb) => eb.fn('replace', ['asset.originalPath', eb.val('\\'), eb.val('/')]),
+        'like',
+        `${prefix}%`,
+      )
+      .where(
+        (eb) => eb.fn('replace', ['asset.originalPath', eb.val('\\'), eb.val('/')]),
+        'not like',
+        `${prefix}%/%`,
+      )
       .orderBy(
-        (eb) => eb.fn('regexp_replace', ['asset.originalPath', eb.val('.*/(.+)'), eb.val(String.raw`\1`)]),
+        (eb) =>
+          eb.fn('regexp_replace', [
+            eb.fn('replace', ['asset.originalPath', eb.val('\\'), eb.val('/')]),
+            eb.val('.*/(.+)'),
+            eb.val(String.raw`\1`),
+          ]),
         'asc',
       )
       .execute();

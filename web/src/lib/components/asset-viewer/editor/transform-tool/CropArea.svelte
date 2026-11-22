@@ -83,6 +83,19 @@
       bind:this={transformManager.overlayEl}
     ></div>
     <div class="crop-frame absolute border-2 border-white" bind:this={transformManager.cropFrame}>
+      <!-- OneDrive-style Aspect Ratio & Resolution Badges -->
+      {#if transformManager.cropAspectRatio && transformManager.cropAspectRatio !== 'free'}
+        <div class="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-md bg-black/75 backdrop-blur-md border border-white/20 text-[11px] font-semibold text-white tracking-wide shadow-lg select-none">
+          {transformManager.cropAspectRatio}
+        </div>
+      {/if}
+
+      {#if transformManager.cropImageSize?.width && transformManager.cropImageSize?.height}
+        <div class="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-md bg-black/75 backdrop-blur-md border border-white/20 text-[11px] font-mono text-neutral-300 tracking-wide shadow-lg select-none">
+          {Math.round(transformManager.cropImageSize.width)} x {Math.round(transformManager.cropImageSize.height)}
+        </div>
+      {/if}
+
       <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div
         class={[

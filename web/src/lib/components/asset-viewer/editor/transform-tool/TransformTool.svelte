@@ -1,6 +1,6 @@
 <script lang="ts">
   import { transformManager } from '#lib/managers/edit/transform-manager.svelte.ts';
-  import { Button, HStack, IconButton, shortcuts } from '@immich/ui';
+  import { Icon, shortcuts } from '@immich/ui';
   import { mdiFlipHorizontal, mdiFlipVertical, mdiRotateLeft, mdiRotateRight } from '@mdi/js';
   import { t } from 'svelte-i18n';
 
@@ -75,73 +75,86 @@
 />
 
 <div class="mt-3 px-4">
-  <div class="mt-2 flex h-10 w-full items-center justify-between text-sm">
+  <div class="flex h-9 w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-neutral-400">
     <h2>{$t('editor_orientation')}</h2>
   </div>
-  <HStack>
-    <IconButton
-      class="w-full"
-      size="small"
-      aria-label={$t('editor_rotate_left')}
-      icon={mdiRotateLeft}
-      onclick={() => rotateImage(-90)}
-    />
-    <IconButton
-      class="w-full"
-      size="small"
-      aria-label={$t('editor_rotate_right')}
-      icon={mdiRotateRight}
-      onclick={() => rotateImage(90)}
-    />
-    <IconButton
-      class="w-full"
-      size="small"
-      aria-label={$t('editor_flip_horizontal')}
-      icon={mdiFlipHorizontal}
-      onclick={() => mirrorImage('horizontal')}
-    />
-    <IconButton
-      class="w-full"
-      size="small"
-      aria-label={$t('editor_flip_vertical')}
-      icon={mdiFlipVertical}
-      onclick={() => mirrorImage('vertical')}
-    />
-  </HStack>
 
-  <div class="mt-6 flex h-10 w-full items-center justify-between text-sm">
-    <h2>{$t('crop')}</h2>
+  <div class="grid grid-cols-4 gap-2 mt-1">
+    <button
+      type="button"
+      class="flex size-10 w-full items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-neutral-300 hover:text-white transition-all active:scale-95 cursor-pointer"
+      title={$t('editor_rotate_left')}
+      onclick={() => rotateImage(-90)}
+    >
+      <Icon icon={mdiRotateLeft} size="20" />
+    </button>
+    <button
+      type="button"
+      class="flex size-10 w-full items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-neutral-300 hover:text-white transition-all active:scale-95 cursor-pointer"
+      title={$t('editor_rotate_right')}
+      onclick={() => rotateImage(90)}
+    >
+      <Icon icon={mdiRotateRight} size="20" />
+    </button>
+    <button
+      type="button"
+      class="flex size-10 w-full items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-neutral-300 hover:text-white transition-all active:scale-95 cursor-pointer"
+      title={$t('editor_flip_horizontal')}
+      onclick={() => mirrorImage('horizontal')}
+    >
+      <Icon icon={mdiFlipHorizontal} size="20" />
+    </button>
+    <button
+      type="button"
+      class="flex size-10 w-full items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-neutral-300 hover:text-white transition-all active:scale-95 cursor-pointer"
+      title={$t('editor_flip_vertical')}
+      onclick={() => mirrorImage('vertical')}
+    >
+      <Icon icon={mdiFlipVertical} size="20" />
+    </button>
   </div>
 
-  <!-- Aspect Ratio Grid -->
-  <div class="mb-4 grid grid-cols-2">
+  <!-- Straighten Angle Scrubber Preview (OneDrive style) -->
+  <div class="mt-4 p-3 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center justify-center">
+    <div class="flex items-center justify-between w-full text-xs text-neutral-400 mb-2">
+      <span>Straighten</span>
+      <span class="font-mono font-semibold text-white">{transformManager.normalizedRotation}°</span>
+    </div>
+    <div class="w-full flex items-center justify-between gap-1 text-[10px] text-neutral-500 font-mono px-1">
+      <span>-90°</span>
+      <div class="flex-1 mx-2 h-1 bg-white/10 rounded-full overflow-hidden relative">
+        <div class="absolute inset-y-0 left-1/2 w-0.5 bg-sky-400 -translate-x-1/2"></div>
+      </div>
+      <span>+90°</span>
+    </div>
+  </div>
+
+  <div class="mt-6 flex h-9 w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-neutral-400">
+    <h2>{$t('crop')} ({aspectRatios.length})</h2>
+  </div>
+
+  <!-- Aspect Ratio Grid (OneDrive style sleek tiles) -->
+  <div class="mb-4 grid grid-cols-2 gap-2 mt-1">
     {#each aspectRatios as ratio (ratio.value)}
-      <HStack>
-        <Button
-          class="m-2 size-14"
-          shape="round"
-          onclick={() => selectAspectRatio(ratio)}
-          aria-label={ratio.label}
-          color={ratioSelected(ratio) ? 'primary' : 'secondary'}
-          variant={ratioSelected(ratio) ? 'filled' : 'outline'}
-        >
+      <button
+        type="button"
+        onclick={() => selectAspectRatio(ratio)}
+        class="flex items-center gap-2.5 p-2.5 rounded-xl border transition-all text-left cursor-pointer {ratioSelected(ratio)
+          ? 'bg-sky-500/15 border-sky-400/50 text-white shadow-xs'
+          : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 text-neutral-300 hover:text-white'}"
+      >
+        <div class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-black/40 border border-white/10">
           {#if ratio.isFree}
-            <!-- Free crop icon with dashed border -->
-            <div
-              class="size-6 shrink-0 rounded-xs border-2 border-dashed {ratioSelected(ratio)
-                ? 'border-black'
-                : 'border-white'}"
-            ></div>
+            <div class="size-4 rounded-xs border border-dashed border-white"></div>
           {:else}
-            <!-- Aspect ratio box -->
             <div
-              class="shrink-0 rounded-xs border-2 {ratioSelected(ratio) ? 'border-black' : 'border-white'}"
-              style="width: {ratio.width}px; height: {ratio.height}px;"
+              class="rounded-xs border border-white"
+              style="width: {Math.min(18, (ratio.width || 18) * 0.75)}px; height: {Math.min(18, (ratio.height || 18) * 0.75)}px;"
             ></div>
           {/if}
-        </Button>
-        <span class="text-sm text-white">{ratio.label}</span>
-      </HStack>
+        </div>
+        <span class="text-xs font-medium truncate">{ratio.label}</span>
+      </button>
     {/each}
   </div>
 </div>
