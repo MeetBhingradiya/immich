@@ -220,7 +220,7 @@ function startMlService() {
       IMMICH_PORT: '3003',
       IMMICH_HOST: '127.0.0.1',
       MACHINE_LEARNING_CACHE_FOLDER: MODEL_CACHE,
-      MACHINE_LEARNING_MODEL_TTL: '0',
+      MACHINE_LEARNING_MODEL_TTL: '180',
       NO_PROXY: '*',
       no_proxy: '*',
       HTTP_PROXY: '',
@@ -325,8 +325,19 @@ if (immichHealthy) {
         log('[SUPERVISOR WARN] Immich health check returned status ' + res.status);
       }
     } catch (e) {
-      log('[SUPERVISOR WARN] Immich server unreachable: ' + e.message + ', restarting Immich...');
-      startImmichServer();
+      let isAlive = false;
+      if (immichProc && immichProc.pid) {
+        try {
+          process.kill(immichProc.pid, 0);
+          isAlive = true;
+        } catch {}
+      }
+      if (!isAlive) {
+        log('[SUPERVISOR WARN] Immich server unreachable and process not alive, restarting Immich...');
+        startImmichServer();
+      } else {
+        log('[SUPERVISOR] Immich Server PID ' + immichProc.pid + ' is still running, waiting for initialization...');
+      }
     }
   }, 30000);
 } else {

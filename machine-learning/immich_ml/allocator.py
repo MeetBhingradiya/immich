@@ -1,4 +1,5 @@
-﻿import ctypes
+import ctypes
+import gc
 import sys
 
 _process = None
@@ -10,7 +11,14 @@ if sys.platform != "win32":
 
 
 def release() -> None:
-    if _process is not None:
+    gc.collect()
+    if sys.platform == "win32":
+        try:
+            # Reclaim unneeded working set physical memory on Windows
+            ctypes.windll.psapi.EmptyWorkingSet(ctypes.windll.kernel32.GetCurrentProcess())
+        except Exception:
+            pass
+    elif _process is not None:
         if hasattr(_process, "mi_collect"):
             _process.mi_collect(True)
         elif hasattr(_process, "malloc_trim"):

@@ -94,6 +94,7 @@ const AssetEditActionItemSchema = z
   })
   .meta({ id: 'AssetEditActionItemDto' });
 
+export const AssetEditActionItem = __AssetEditActionItemSchema;
 export type AssetEditActionItem = z.infer<typeof __AssetEditActionItemSchema>;
 export type AssetEditParameters = AssetEditActionItem['parameters'];
 

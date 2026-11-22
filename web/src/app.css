@@ -220,13 +220,13 @@
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 1.25rem !important; /* 20px curvature */
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
 
-@utility liquid-glass-card:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.3) !important;
+  &:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.16) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.3) !important;
+  }
 }
 
 @utility liquid-glass-dock {
@@ -237,4 +237,3 @@
   border-radius: 9999px !important;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6) !important;
 }
-

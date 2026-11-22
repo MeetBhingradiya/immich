@@ -35,53 +35,65 @@
   };
 </script>
 
-<section>
+<section class="space-y-6">
   {#if showTitle}
-    <Heading color="primary" tag="h1" class="text-4xl font-bold tracking-wider">
-      {$t('purchase_option_title')}
-    </Heading>
+    <div class="space-y-1">
+      <Heading color="primary" tag="h1" class="text-3xl font-black tracking-tight text-white">
+        {$t('purchase_option_title')}
+      </Heading>
+      <p class="text-sm text-neutral-400">
+        {$t('purchase_product_key_description')}
+      </p>
+    </div>
+  {:else}
+    <p class="text-sm text-neutral-400">
+      {$t('purchase_product_key_description')}
+    </p>
   {/if}
 
-  <Text>{$t('purchase_product_key_description')}</Text>
-  <Text fontWeight="bold">{$t('purchase_product_key_excludes_backups')}</Text>
-
   {#if showMessage}
-    <div class="mt-2">
-      <p>
+    <div class="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
+      <p class="text-xs leading-relaxed text-neutral-300">
         {$t('purchase_panel_info_1')}
       </p>
-      <br />
-      <p>
-        {$t('purchase_panel_info_2')}
-      </p>
-      <div></div>
     </div>
   {/if}
 
-  <div class="mt-4 flex flex-col justify-between gap-6 sm:flex-row">
+  <div class="flex flex-col justify-start gap-6 sm:flex-row">
     <ServerPurchaseOptionCard />
     <UserPurchaseOptionCard />
   </div>
 
-  <div class="mt-6">
-    <p class="dark:text-immich-gray">{$t('purchase_input_suggestion')}</p>
-    <form class="mt-2 flex gap-2" onsubmit={activate}>
+  <!-- Activation Key Input - Samsung One UI Card Style -->
+  <div class="rounded-3xl border border-white/10 bg-[#121622]/90 p-6 backdrop-blur-2xl shadow-xl">
+    <label for="purchaseKey" class="block text-sm font-semibold text-white">
+      {$t('purchase_input_suggestion')}
+    </label>
+    <p class="mt-1 text-xs text-neutral-400">
+      Enter your license key (e.g. IMSV-... or IMCL-...) to unlock full supporter features on this server.
+    </p>
+
+    <form class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center" onsubmit={activate}>
       <input
-        class="immich-form-input w-full"
+        class="immich-form-input flex-1 rounded-full border border-white/15 bg-neutral-900/80 px-5 py-3 text-sm text-white placeholder-neutral-500 shadow-inner outline-none transition-all focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
         id="purchaseKey"
         type="text"
         bind:value={productKey}
         required
-        placeholder="IMCL-0KEY-0CAN-00BE-FOUD-FROM-YOUR-EMAIL-INBX"
+        placeholder="IMCL-MEET-BHIN-GRAD-IYA1-2026-FLEX-GOLD-PRO1"
         disabled={isLoading}
       />
-      <Button type="submit"
-        >{#if isLoading}
+      <Button
+        type="submit"
+        shape="round"
+        class="rounded-full px-8 py-3 text-sm font-semibold shadow-lg shadow-sky-600/25 sm:w-auto"
+      >
+        {#if isLoading}
           <LoadingSpinner />
         {:else}
           {$t('purchase_button_activate')}
-        {/if}</Button
-      >
+        {/if}
+      </Button>
     </form>
   </div>
 </section>

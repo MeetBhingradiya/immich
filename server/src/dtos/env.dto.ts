@@ -12,7 +12,7 @@ enum DatabaseSslMode {
 }
 
 const DatabaseSslModeSchema = z.enum(DatabaseSslMode).describe('Database SSL mode').meta({ id: 'DatabaseSslMode' });
-const absolutePath = z.string().regex(/^\//, 'Must be an absolute path').optional();
+const absolutePath = z.string().regex(/^([a-zA-Z]:[\\\/]|^\/)/, 'Must be an absolute path').optional();
 /**
 Treat certain strings as booleans and coerce them to boolean
 Ideal for environment variables that are strings but should be treated as booleans

@@ -1,4 +1,4 @@
-import { Selectable, ShallowDehydrateObject } from 'kysely';
+﻿import { Selectable, ShallowDehydrateObject } from 'kysely';
 import { MapAsset } from 'src/dtos/asset-response.dto.js';
 import { PersonUserRole } from 'src/dtos/person.dto.js';
 import {
@@ -599,7 +599,6 @@ export const columns = {
   ],
 } as const;
 
-export type LockableProperty = (typeof lockableProperties)[number];
 export const lockableProperties = [
   'description',
   'dateTimeOriginal',
@@ -609,3 +608,34 @@ export const lockableProperties = [
   'timeZone',
   'tags',
 ] as const;
+export const LockableProperty = lockableProperties;
+export type LockableProperty = (typeof lockableProperties)[number];
+
+// Companion exports for Bun runtime type-import compatibility
+export const AuthUser = {} as any;
+export const AlbumUser = {} as any;
+export const AssetFile = {} as any;
+export const Library = {} as any;
+export const AuthApiKey = {} as any;
+export const Activity = {} as any;
+export const ApiKey = {} as any;
+export const Passkey = {} as any;
+export const Tag = {} as any;
+export const Memory = {} as any;
+export const Asset = {} as any;
+export const User = {} as any;
+export const UserAdmin = {} as any;
+export const StorageAsset = {} as any;
+export const Stack = {} as any;
+export const AuthSharedLink = {} as any;
+export const SharedLink = {} as any;
+export const Album = {} as any;
+export const AuthSession = {} as any;
+export const Partner = {} as any;
+export const Place = {} as any;
+export const Session = {} as any;
+export const Exif = {} as any;
+export const Person = {} as any;
+export const PersonUser = {} as any;
+export const AssetFace = {} as any;
+export const Plugin = {} as any;

@@ -6,38 +6,59 @@
   import { t } from 'svelte-i18n';
 </script>
 
-<!-- Individual Purchase Option -->
+<!-- Individual Purchase Option - Samsung One UI Liquid Glass -->
 <div
-  class="w-[min(375px,100%)] rounded-3xl border border-gray-300 bg-gray-100 p-8 dark:border-gray-800 dark:bg-gray-900"
+  class="relative w-[min(380px,100%)] overflow-hidden rounded-3xl border border-white/10 bg-[#121622]/90 p-8 backdrop-blur-2xl shadow-2xl transition-all duration-300 hover:border-purple-500/40 hover:shadow-purple-500/10"
 >
-  <div class="text-primary">
-    <Icon icon={mdiAccount} size="56" />
-    <p class="mt-1 text-lg font-semibold">{$t('purchase_individual_title')}</p>
+  <div class="flex items-center gap-4">
+    <div
+      class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/25"
+    >
+      <Icon icon={mdiAccount} size="32" class="text-white" />
+    </div>
+    <div>
+      <span class="rounded-full bg-purple-500/15 border border-purple-400/30 px-2.5 py-0.5 text-[10px] font-semibold tracking-wider text-purple-300 uppercase">
+        Personal Supporter
+      </span>
+      <p class="mt-0.5 text-lg font-bold text-white">{$t('purchase_individual_title')}</p>
+    </div>
   </div>
 
-  <div class="mt-4 dark:text-immich-gray">
-    <p class="text-6xl font-bold">$25</p>
-    <p>{$t('purchase_per_user')}</p>
+  <div class="mt-6 flex items-baseline gap-2">
+    <span class="text-5xl font-black tracking-tight text-white">$25</span>
+    <span class="text-sm font-medium text-neutral-400">{$t('purchase_per_user')}</span>
   </div>
 
-  <div class="flex h-50 flex-col justify-between dark:text-immich-gray">
-    <div class="mt-6 flex flex-col gap-1">
-      <div class="grid grid-cols-[36px_auto]">
-        <Icon icon={mdiCheckCircleOutline} size="24" class="self-center text-green-500" />
-        <p class="self-center">{$t('purchase_individual_description_1')}</p>
+  <div class="my-6 border-t border-white/10"></div>
+
+  <div class="flex min-h-48 flex-col justify-between">
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+          <Icon icon={mdiCheckCircleOutline} size="18" />
+        </div>
+        <p class="text-xs text-neutral-200">{$t('purchase_individual_description_1')}</p>
       </div>
 
-      <div class="grid grid-cols-[36px_auto]">
-        <Icon icon={mdiCheckCircleOutline} size="24" class="self-center text-green-500" />
-        <p class="self-center">{$t('purchase_lifetime_description')}</p>
+      <div class="flex items-center gap-3">
+        <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+          <Icon icon={mdiCheckCircleOutline} size="18" />
+        </div>
+        <p class="text-xs text-neutral-200">{$t('purchase_lifetime_description')}</p>
       </div>
 
-      <div class="grid grid-cols-[36px_auto]">
-        <Icon icon={mdiCheckCircleOutline} size="24" class="self-center text-green-500" />
-        <p class="self-center">{$t('purchase_individual_description_2')}</p>
+      <div class="flex items-center gap-3">
+        <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+          <Icon icon={mdiCheckCircleOutline} size="18" />
+        </div>
+        <p class="text-xs text-neutral-200">{$t('purchase_individual_description_2')}</p>
       </div>
     </div>
 
-    <Button shape="round" href={getProductLink(ImmichProduct.Client)} fullWidth>{$t('purchase_button_select')}</Button>
+    <div class="mt-6">
+      <Button shape="round" href={getProductLink(ImmichProduct.Client)} fullWidth class="rounded-full py-2.5 shadow-lg shadow-purple-600/20">
+        {$t('purchase_button_select')}
+      </Button>
+    </div>
   </div>
 </div>

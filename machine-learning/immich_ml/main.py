@@ -254,7 +254,8 @@ async def attempt[O: Options, R](
 async def idle_shutdown_task() -> None:
     while True:
         if last_called is not None and not active_requests and time.time() - last_called > settings.model_ttl:
-            log.info("Shutting down due to inactivity.")
-            os.kill(os.getpid(), signal.SIGINT)
-            break
+            if model_cache._models:
+                log.info("Inactivity threshold reached: clearing model cache and releasing memory.")
+                model_cache.clear()
+            allocator.release()
         await asyncio.sleep(settings.model_ttl_poll_s)

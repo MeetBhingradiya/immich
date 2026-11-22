@@ -83,6 +83,7 @@ export class PluginMethodSearchDto extends createZodDto(PluginMethodSearchSchema
 export class PluginMethodResponseDto extends createZodDto(PluginMethodResponseSchema) {}
 export class PluginTemplateResponseDto extends createZodDto(PluginTemplateResponseSchema) {}
 
+export const PluginTemplate = {} as any;
 export type PluginTemplate = {
   name: string;
   title: string;
