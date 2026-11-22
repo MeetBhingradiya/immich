@@ -28,7 +28,7 @@
 </script>
 
 <div
-  class="group relative rounded-2xl border border-transparent p-5 hover:border-gray-200 hover:bg-gray-100 dark:hover:border-gray-800 dark:hover:bg-gray-900"
+  class="group relative rounded-2xl border border-transparent p-3.5 transition-all duration-200 hover:border-slate-200/80 hover:bg-slate-100/80 dark:hover:border-white/10 dark:hover:bg-white/5 hover:shadow-xl hover:shadow-black/20"
   data-testid="album-card"
 >
   {#if contextMenuItems}
@@ -47,11 +47,11 @@
     </div>
   {/if}
 
-  <AlbumCover {album} {preload} class="transition-all duration-300 hover:shadow-lg" />
+  <AlbumCover {album} {preload} class="transition-all duration-300 hover:shadow-lg rounded-xl overflow-hidden" />
 
-  <div class="mt-4">
+  <div class="mt-3">
     <p
-      class="line-clamp-2 w-full text-lg/6 font-semibold wrap-break-word text-black group-hover:text-primary dark:text-white"
+      class="line-clamp-1 w-full text-base font-semibold wrap-break-word text-neutral-900 group-hover:text-primary dark:text-white"
       data-testid="album-name"
       title={album.albumName}
     >
@@ -59,12 +59,12 @@
     </p>
 
     {#if showDateRange && album.startDate && album.endDate}
-      <p class="flex text-sm capitalize dark:text-immich-dark-fg">
+      <p class="flex text-xs capitalize text-neutral-500 dark:text-neutral-400 mt-0.5">
         {getShortDateRange(album.startDate, album.endDate)}
       </p>
     {/if}
 
-    <span class="flex gap-2 text-sm dark:text-immich-dark-fg" data-testid="album-details">
+    <span class="flex gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 mt-0.5" data-testid="album-details">
       {#if showItemCount}
         <p>
           {$t('items_count', { values: { count: album.assetCount } })}

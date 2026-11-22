@@ -64,13 +64,16 @@
 <div
   bind:this={menuScrollView}
   class={[
-    'fixed z-70 w-max max-w-75 min-w-50 immich-scrollbar rounded-lg bg-slate-100 shadow-lg duration-250 ease-in-out',
+    'fixed z-70 w-max max-w-80 min-w-56 immich-scrollbar rounded-2xl p-1.5 duration-200 ease-out',
+    'bg-white/95 dark:bg-neutral-900/95 backdrop-blur-2xl',
+    'border border-slate-200/80 dark:border-white/10',
+    'shadow-[0_16px_40px_rgba(0,0,0,0.45)]',
     position.needScrollBar ? 'overflow-auto' : 'overflow-hidden',
   ]}
   style:left="{position.left}px"
   style:top="{position.top}px"
   style:max-height={isVisible ? `${position.maxHeight}px` : '0px'}
-  style:transition-property="max-height"
+  style:transition-property="max-height, opacity, transform"
   style:scrollbar-color="rgba(85, 86, 87, 0.408) transparent"
   {@attach clickOutside({ onOutclick: onClose })}
   tabindex="-1"
@@ -81,7 +84,7 @@
     aria-label={ariaLabel}
     aria-labelledby={ariaLabelledBy}
     bind:this={menuElement}
-    class="flex flex-col outline-none"
+    class="flex flex-col gap-0.5 outline-none"
     role="menu"
     tabindex="-1"
   >

@@ -17,8 +17,8 @@
     text,
     subtitle = '',
     icon,
-    activeColor = 'bg-slate-300',
-    textColor = 'text-immich-fg dark:text-immich-dark-bg',
+    activeColor = 'bg-neutral-100 dark:bg-white/10 text-neutral-900 dark:text-white',
+    textColor = 'text-neutral-700 dark:text-neutral-200',
     onClick,
     shortcut = null,
     shortcutLabel = '',
@@ -47,25 +47,25 @@
   onclick={handleClick}
   onmouseover={() => ($selectedIdStore = id)}
   onmouseleave={() => ($selectedIdStore = undefined)}
-  class="w-full p-4 text-start text-sm font-medium {textColor} flex cursor-pointer items-center gap-2 border-gray-200 focus:ring-2 focus:outline-none focus:ring-inset {isActive
+  class="w-full px-3.5 py-2.5 text-start text-sm font-medium rounded-xl flex cursor-pointer items-center gap-3 transition-colors duration-150 {textColor} focus:ring-2 focus:outline-none focus:ring-inset {isActive
     ? activeColor
-    : 'bg-slate-100'}"
+    : 'hover:bg-neutral-100/70 dark:hover:bg-white/5'}"
   role="menuitem"
 >
   {#if icon}
-    <Icon {icon} aria-hidden size="18" />
+    <Icon {icon} aria-hidden size="18" class="shrink-0 text-neutral-500 dark:text-neutral-400 group-hover:text-white" />
   {/if}
-  <div class="w-full">
-    <div class="flex justify-between">
-      {text}
+  <div class="w-full min-w-0">
+    <div class="flex justify-between items-center">
+      <span class="truncate">{text}</span>
       {#if shortcutLabel}
-        <span class="ps-4 text-gray-500">
+        <span class="ps-4 text-xs text-neutral-400 dark:text-neutral-500 font-mono">
           {shortcutLabel}
         </span>
       {/if}
     </div>
     {#if subtitle}
-      <p class="text-xs text-gray-500">
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 truncate">
         {subtitle}
       </p>
     {/if}

@@ -106,30 +106,30 @@
   <!-- DROP DOWN MENU -->
   {#if showMenu}
     <div
-      transition:fly={{ y: -30, duration: 250 }}
-      class="absolute z-1 flex max-h-[70vh] min-w-75 immich-scrollbar flex-col overflow-y-auto rounded-2xl bg-gray-100 py-2 text-sm font-medium text-black shadow-lg dark:bg-gray-700 dark:text-white {className} {getAlignClass(
+      transition:fly={{ y: -20, duration: 200 }}
+      class="absolute z-50 flex max-h-[70vh] min-w-72 immich-scrollbar flex-col gap-0.5 overflow-y-auto rounded-2xl bg-white/95 p-1.5 text-sm font-medium text-neutral-800 shadow-2xl backdrop-blur-2xl border border-slate-200/80 dark:border-white/10 dark:bg-neutral-900/95 dark:text-neutral-100 {className} {getAlignClass(
         position,
       )}"
     >
       {#each options as option (option)}
         {const renderedOption = renderOption(option)}
-        {const buttonStyle = renderedOption.disabled ? '' : 'transition-all hover:bg-gray-300 dark:hover:bg-gray-800'}
+        {const isCurrent = isEqual(selectedOption, option)}
         <button
           type="button"
-          class="grid grid-cols-[36px_1fr] place-items-center p-2 disabled:opacity-40 {buttonStyle}"
+          class="grid grid-cols-[32px_1fr] items-center px-3 py-2 rounded-xl text-start transition-colors duration-150 disabled:opacity-40 cursor-pointer {isCurrent ? 'bg-primary-50 text-primary dark:bg-white/10 dark:text-white font-semibold' : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-white/5'}"
           disabled={renderedOption.disabled}
           onclick={() => !renderedOption.disabled && handleSelectOption(option)}
         >
-          {#if isEqual(selectedOption, option)}
-            <div class="text-primary">
-              <Icon icon={mdiCheck} />
+          {#if isCurrent}
+            <div class="text-primary dark:text-blue-400">
+              <Icon icon={mdiCheck} size="18" />
             </div>
-            <p class="justify-self-start text-primary">
+            <p class="justify-self-start truncate">
               {renderedOption.title}
             </p>
           {:else}
             <div></div>
-            <p class="justify-self-start">
+            <p class="justify-self-start truncate">
               {renderedOption.title}
             </p>
           {/if}
