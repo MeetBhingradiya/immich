@@ -7,13 +7,19 @@ from pathlib import Path
 from socket import socket
 from typing import Any
 
-from gunicorn.arbiter import Arbiter
+try:
+    from gunicorn.arbiter import Arbiter
+except Exception:
+    Arbiter = None
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from rich.console import Console
 from rich.logging import RichHandler
 from uvicorn import Server
-from uvicorn.workers import UvicornWorker
+try:
+    from uvicorn.workers import UvicornWorker
+except Exception:
+    UvicornWorker = object
 
 from .schemas import ModelOrganization
 
@@ -174,4 +180,4 @@ class CustomUvicornWorker(UvicornWorker):
         self._install_sigquit_handler()
         await server.serve(sockets=self.sockets)
         if not server.started:
-            sys.exit(Arbiter.WORKER_BOOT_ERROR)
+            sys.exit(Arbiter.WORKER_BOOT_ERROR if Arbiter else 1)

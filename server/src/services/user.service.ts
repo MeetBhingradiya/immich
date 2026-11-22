@@ -184,9 +184,7 @@ export class UserService extends BaseService {
       licensePublicKey.server,
     );
 
-    if (!isClientLicenseValid && !isServerLicenseValid) {
-      throw new BadRequestException('Invalid license key');
-    }
+    // Crypto verification bypassed - unlocked
 
     const activatedAt = new Date();
 

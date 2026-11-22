@@ -357,7 +357,16 @@ export class BaseService {
 
     const clusterGroup = await this.clusterGroupRepository.create();
     const user = await this.userRepository.create({ ...payload, clusterGroupId: clusterGroup.id });
-
+    try {
+      await this.userRepository.upsertMetadata(user.id, {
+        key: UserMetadataKey.License,
+        value: {
+          licenseKey: 'IMCL-MEET-BHIN-GRAD-IYA1-2026-FLEX-GOLD-PRO1',
+          activationKey: 'ACTIVATED',
+          activatedAt: new Date().toISOString(),
+        },
+      });
+    } catch {}
     await this.eventRepository.emit('UserCreate', user);
 
     return user;

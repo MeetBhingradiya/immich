@@ -1,9 +1,31 @@
-import fcntl
 import pickle
 import sys
 from pathlib import Path
 from shutil import rmtree
 from typing import Any
+
+if sys.platform == "win32":
+    import msvcrt
+
+    def lock_file(f):
+        try:
+            msvcrt.locking(f.fileno(), msvcrt.LK_LOCK, 1)
+        except Exception:
+            pass
+
+    def unlock_file(f):
+        try:
+            msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+        except Exception:
+            pass
+else:
+    import fcntl
+
+    def lock_file(f):
+        fcntl.flock(f, fcntl.LOCK_EX)
+
+    def unlock_file(f):
+        fcntl.flock(f, fcntl.LOCK_UN)
 
 import onnx
 from google.protobuf.message import DecodeError
@@ -18,12 +40,15 @@ from .ort import UNREADABLE, GraphSpec, Manifest, fresh
 def main() -> None:
     spec: GraphSpec = pickle.loads(sys.stdin.buffer.read())
     with spec.model_path.with_suffix(".lock").open("w") as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX)  # several workers may want the same graph
-        if fresh(spec) is None:
-            try:
-                prepare(spec)
-            except (InvalidProtobuf, NoSuchFile, DecodeError):
-                sys.exit(UNREADABLE)
+        lock_file(lock)  # several workers may want the same graph
+        try:
+            if fresh(spec) is None:
+                try:
+                    prepare(spec)
+                except (InvalidProtobuf, NoSuchFile, DecodeError):
+                    sys.exit(UNREADABLE)
+        finally:
+            unlock_file(lock)
 
 
 def prepare(spec: GraphSpec) -> None:

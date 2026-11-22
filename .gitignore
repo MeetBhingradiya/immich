@@ -29,3 +29,6 @@ vite.config.js.timestamp-*
 *.tsbuildinfo
 *.tsbuildInfo
 misc/release/notes.md
+
+*.sql
+server/*.exe

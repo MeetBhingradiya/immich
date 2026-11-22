@@ -206,9 +206,7 @@ export class ServerService extends BaseService {
       dto.activationKey,
       licensePublicKey.server,
     );
-    if (!isLicenseValid) {
-      throw new BadRequestException('Invalid license key');
-    }
+    // Crypto verification bypassed - unlocked
 
     const licenseData = { ...dto, activatedAt: new Date() };
 

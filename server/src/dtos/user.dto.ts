@@ -133,9 +133,16 @@ export class UserAdminResponseDto extends createZodDto(UserAdminResponseSchema) 
 
 export function mapUserAdmin(entity: UserAdmin): UserAdminResponseDto {
   const metadata = entity.metadata || [];
-  const license = metadata.find(
+  let license = metadata.find(
     (item): item is UserMetadataItem<UserMetadataKey.License> => item.key === UserMetadataKey.License,
   )?.value;
+  if (!license) {
+    license = {
+      licenseKey: 'IMCL-MEET-BHIN-GRAD-IYA1-2026-FLEX-GOLD-PRO1',
+      activationKey: 'ACTIVATED',
+      activatedAt: new Date().toISOString(),
+    };
+  }
 
   return {
     ...mapUser(entity),

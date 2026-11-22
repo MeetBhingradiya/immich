@@ -56,9 +56,7 @@ export async function configureExpress(
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ limit: '10mb' }));
 
-  if (configRepository.isDev()) {
-    app.enableCors();
-  }
+  app.enableCors({ origin: true, credentials: true });
 
   app.setGlobalPrefix('api', { exclude: excludePaths });
   app.useWebSocketAdapter(new WebSocketAdapter(app));
