@@ -157,8 +157,8 @@
       const fitContainer =
         objectFit === 'contain'
           ? {
-              width: Math.max(0, container.width - 24),
-              height: Math.max(0, container.height - 32),
+              width: Math.max(0, container.width - 32),
+              height: Math.max(0, container.height - 48),
             }
           : container;
       const { width, height } = scaleFn(imageDimensions, fitContainer);

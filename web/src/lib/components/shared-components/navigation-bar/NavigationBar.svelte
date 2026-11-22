@@ -65,7 +65,7 @@
 
   const pathname = $derived(page.url.pathname);
 
-  // Dynamic Navigation Items matching feature settings
+  // Dynamic Navigation Items matching OneDrive layout & user feature preferences
   const navItems = $derived([
     {
       id: 'moments',
@@ -73,8 +73,6 @@
       href: Route.moments(),
       icon: mdiCreationOutline,
       activeIcon: mdiCreation,
-      activeColor: 'text-purple-400',
-      indicatorColor: 'bg-purple-500',
       isActive: pathname.startsWith('/moments') || pathname.startsWith('/memories'),
     },
     {
@@ -83,8 +81,6 @@
       href: Route.photos(),
       icon: mdiImageMultipleOutline,
       activeIcon: mdiImageMultiple,
-      activeColor: 'text-blue-400',
-      indicatorColor: 'bg-blue-500',
       isActive: pathname === '/photos' || pathname === '/' || pathname.startsWith('/photos/'),
     },
     ...(authManager.preferences.people?.enabled && authManager.preferences.people?.sidebarWeb
@@ -95,8 +91,6 @@
             href: Route.people(),
             icon: mdiAccountOutline,
             activeIcon: mdiAccount,
-            activeColor: 'text-amber-400',
-            indicatorColor: 'bg-amber-500',
             isActive: pathname.startsWith('/people'),
           },
         ]
@@ -107,8 +101,6 @@
       href: Route.albums(),
       icon: mdiBookMultipleOutline,
       activeIcon: mdiBookMultiple,
-      activeColor: 'text-emerald-400',
-      indicatorColor: 'bg-emerald-500',
       isActive: pathname.startsWith('/albums') || pathname.startsWith('/auto-albums'),
     },
     {
@@ -117,8 +109,6 @@
       href: Route.favorites(),
       icon: mdiHeartOutline,
       activeIcon: mdiHeart,
-      activeColor: 'text-rose-400',
-      indicatorColor: 'bg-rose-500',
       isActive: pathname.startsWith('/favorites'),
     },
     ...(config?.map?.enabled
@@ -129,8 +119,6 @@
             href: Route.map(),
             icon: mdiMapOutline,
             activeIcon: mdiMap,
-            activeColor: 'text-teal-400',
-            indicatorColor: 'bg-teal-500',
             isActive: pathname.startsWith('/map'),
           },
         ]
@@ -141,8 +129,6 @@
       href: Route.explore(),
       icon: mdiMagnify,
       activeIcon: mdiMagnify,
-      activeColor: 'text-indigo-400',
-      indicatorColor: 'bg-indigo-500',
       isActive: pathname.startsWith('/explore') || pathname.startsWith('/search'),
     },
     ...(authManager.preferences.folders?.enabled && authManager.preferences.folders?.sidebarWeb
@@ -153,8 +139,6 @@
             href: Route.folders(),
             icon: mdiFolderOutline,
             activeIcon: mdiFolder,
-            activeColor: 'text-sky-400',
-            indicatorColor: 'bg-sky-500',
             isActive: pathname.startsWith('/folders'),
           },
         ]
@@ -164,61 +148,85 @@
 
 <svelte:window bind:innerWidth />
 
-<nav id="dashboard-navbar" class="relative z-50 h-(--navbar-height) w-dvw text-sm max-md:h-(--navbar-height-md) border-b border-white/10 bg-neutral-950/80 backdrop-blur-xl px-6 sm:px-8 select-none">
+<!-- Fixed 48px Top Navigation Bar (OneDrive exact Fluent Dark Header) -->
+<nav
+  id="dashboard-navbar"
+  class="relative z-[9900] h-12 w-dvw text-sm border-b border-white/10 bg-[#141414]/95 backdrop-blur-xl px-4 sm:px-6 select-none"
+>
   <SkipLink text={$t('skip_to_content')} />
   <div class="flex h-full items-center justify-between gap-4">
-    <!-- Left: Immich Logo + OneDrive-style [ Photos | Folders ] Capsule -->
-    <div class="flex items-center gap-3 shrink-0">
+    <!-- Left: 9-dot Waffle + Immich Logo + [ Photos | Folders ] Capsule -->
+    <div class="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+      <!-- 9-dot Waffle App Launcher Icon (Screenshot 3) -->
+      <button
+        type="button"
+        class="flex size-8 items-center justify-center rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors cursor-pointer"
+        title="App Launcher"
+        aria-label="App Launcher"
+      >
+        <svg class="size-4.5 fill-current" viewBox="0 0 16 16">
+          <circle cx="2.5" cy="2.5" r="1.5" />
+          <circle cx="8" cy="2.5" r="1.5" />
+          <circle cx="13.5" cy="2.5" r="1.5" />
+          <circle cx="2.5" cy="8" r="1.5" />
+          <circle cx="8" cy="8" r="1.5" />
+          <circle cx="13.5" cy="8" r="1.5" />
+          <circle cx="2.5" cy="13.5" r="1.5" />
+          <circle cx="8" cy="13.5" r="1.5" />
+          <circle cx="13.5" cy="13.5" r="1.5" />
+        </svg>
+      </button>
+
       <a data-sveltekit-preload-data="hover" href={Route.photos()} class="flex items-center gap-2 group" title="Immich">
-        <Logo variant="inline" class="h-8.5 sm:h-9 max-md:h-7 transition-transform duration-200 group-hover:scale-105" />
+        <Logo variant="inline" class="h-7.5 sm:h-8 max-md:h-6.5 transition-transform duration-200 group-hover:scale-105" />
       </a>
 
-      <!-- OneDrive-style [ Photos | Folders ] segmented capsule -->
+      <!-- OneDrive [ Photos | Folders ] segmented capsule (Screenshot 3) -->
       <div class="hidden sm:flex items-center p-0.5 rounded-full bg-white/8 border border-white/10 text-xs font-semibold backdrop-blur-md select-none">
         <a
           data-sveltekit-preload-data="hover"
           href={Route.photos()}
-          class="px-3 py-1 rounded-full transition-all duration-200 {pathname !== '/folders' ? 'bg-white text-black font-semibold shadow-xs' : 'text-neutral-400 hover:text-white'}"
+          class="px-3 py-1 rounded-full transition-all duration-150 {pathname !== '/folders' ? 'bg-[#2b2b2b] text-white font-semibold shadow-xs' : 'text-neutral-400 hover:text-white'}"
         >
           Photos
         </a>
         <a
           data-sveltekit-preload-data="hover"
           href={Route.folders()}
-          class="px-3 py-1 rounded-full transition-all duration-200 {pathname === '/folders' ? 'bg-white text-black font-semibold shadow-xs' : 'text-neutral-400 hover:text-white'}"
+          class="px-3 py-1 rounded-full transition-all duration-150 {pathname === '/folders' ? 'bg-[#2b2b2b] text-white font-semibold shadow-xs' : 'text-neutral-400 hover:text-white'}"
         >
           Folders
         </a>
       </div>
     </div>
 
-    <!-- Middle: Dynamic Nav Items with Icons & Labels (OneDrive-style) -->
+    <!-- Middle: Center Nav Tabs with Stacked Icon & Label (OneDrive Screenshot 3 exact layout) -->
     <div class="flex items-center justify-center gap-0.5 sm:gap-1 lg:gap-2 h-full">
       {#each navItems as item (item.id)}
         <a
           data-sveltekit-preload-data="hover"
           href={item.href}
-          class="relative flex flex-col items-center justify-center h-12 my-auto px-3 sm:px-4 rounded-xl transition-all duration-150 ease-out select-none group
+          class="relative flex flex-col items-center justify-center h-12 my-auto px-2.5 sm:px-3.5 transition-all duration-150 ease-out select-none group
             {item.isActive 
               ? 'text-white font-semibold' 
-              : 'text-[#cccccc] hover:text-white hover:bg-white/5 font-normal'}"
+              : 'text-[#a6a6a6] hover:text-white hover:bg-white/5 font-normal'}"
           title={item.label}
         >
           <div class="flex items-center justify-center transition-transform duration-150 group-hover:scale-105">
             <Icon
               icon={item.isActive ? item.activeIcon : item.icon}
-              size="20px"
+              size="19px"
               class="transition-colors duration-150 {item.isActive ? 'text-[#0078d4]' : 'text-neutral-400 group-hover:text-white'}"
             />
           </div>
 
           {#if !$hideTopNavLabels}
-            <span class="text-[11px] mt-0.5 tracking-tight transition-colors duration-150 {item.isActive ? 'text-white font-semibold' : 'text-[#a19f9d] group-hover:text-white'}">
+            <span class="text-[10.5px] mt-0.5 tracking-tight transition-colors duration-150 {item.isActive ? 'text-white font-semibold' : 'text-[#a6a6a6] group-hover:text-white'}">
               {item.label}
             </span>
           {/if}
 
-          <!-- Active Page Indicator: OneDrive Blue Accent Bottom Bar -->
+          <!-- Active Page Indicator: OneDrive Blue Accent Bottom Bar (#0078d4) -->
           {#if item.isActive}
             <span
               in:fade={{ duration: 150 }}
@@ -230,9 +238,9 @@
       {/each}
     </div>
 
-    <!-- Right: Circular Storage Gauge, Notifications, Cast, Theme, Settings, User Avatar -->
-    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-      <!-- Google Photos Style Circular Storage Indicator -->
+    <!-- Right: Storage Indicator, Theme, Notifications, Settings, User Avatar -->
+    <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+      <!-- Storage Gauge -->
       <CircularStorageIndicator />
 
       <ThemeButton />
@@ -284,17 +292,11 @@
         aria-label={$t('settings')}
       />
 
-      <!-- User Avatar -->
-      <div
-        class="relative"
-        {@attach clickOutside({
-          onOutclick: () => (shouldShowAccountInfoPanel = false),
-          onEscape: () => (shouldShowAccountInfoPanel = false),
-        })}
-      >
+      <!-- User Avatar (Triggers fixed z-[9999] Account Flyout) -->
+      <div class="relative">
         <button
           type="button"
-          class="flex ps-1 cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95"
+          class="flex ps-1 cursor-pointer transition-transform duration-150 hover:scale-105 active:scale-95"
           onclick={() => (shouldShowAccountInfoPanel = !shouldShowAccountInfoPanel)}
           title="{authManager.user.name} ({authManager.user.email})"
         >

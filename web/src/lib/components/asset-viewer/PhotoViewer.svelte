@@ -73,8 +73,8 @@
     }
 
     const fitContainer = {
-      width: Math.max(0, containerWidth - 24),
-      height: Math.max(0, containerHeight - 32),
+      width: Math.max(0, containerWidth - 32),
+      height: Math.max(0, containerHeight - 48),
     };
     return scaleToFit(getNaturalSize(assetViewerManager.imgRef), fitContainer);
   });

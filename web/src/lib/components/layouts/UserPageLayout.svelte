@@ -42,10 +42,10 @@
   );
 
   let scrollbarClass = $derived(scrollbar ? 'immich-scrollbar' : 'scrollbar-hidden');
-  let hasTitleClass = $derived(title ? 'top-16 h-[calc(100%-(--spacing(16)))]' : 'top-0 h-full');
+  let hasTitleClass = $derived(title ? 'top-14 h-[calc(100%-(--spacing(14)))]' : 'top-0 h-full');
 </script>
 
-<header class="relative z-50">
+<header class="relative z-[9900]">
   {#if !hideNavbar}
     <NavigationBar onUploadClick={() => openFileUploadDialog()} />
   {/if}
@@ -67,10 +67,10 @@
     </div>
 
     {#if title || buttons}
-      <div class="absolute flex h-16 w-full place-items-center justify-between border-b border-white/10 p-2 text-dark bg-neutral-900/60 backdrop-blur-md">
+      <div class="absolute flex h-14 w-full place-items-center justify-between border-b border-white/10 px-6 text-dark bg-[#141414]/85 backdrop-blur-md">
         <div class="flex items-center gap-2">
           {#if title}
-            <div class="pe-8 outline-none text-base font-bold text-white" tabindex="-1" id={headerId}>{title}</div>
+            <div class="pe-8 outline-none text-xl font-bold text-white font-['Segoe_UI',sans-serif]" tabindex="-1" id={headerId}>{title}</div>
           {/if}
           {#if description}
             <p class="text-sm text-neutral-400">{description}</p>
