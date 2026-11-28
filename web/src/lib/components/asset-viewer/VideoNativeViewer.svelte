@@ -16,10 +16,12 @@
     mdiCheck,
     mdiChevronLeft,
     mdiChevronRight,
+    mdiFastForward10,
     mdiFullscreen,
     mdiFullscreenExit,
     mdiPause,
     mdiPlay,
+    mdiRewind10,
     mdiVolumeHigh,
     mdiVolumeLow,
     mdiVolumeMedium,
@@ -34,6 +36,8 @@
   import 'media-chrome/media-mute-button';
   import 'media-chrome/media-play-button';
   import 'media-chrome/media-playback-rate-button';
+  import 'media-chrome/media-seek-backward-button';
+  import 'media-chrome/media-seek-forward-button';
   import 'media-chrome/media-time-display';
   import 'media-chrome/media-volume-range';
   import 'media-chrome/menu/media-playback-rate-menu';
@@ -278,6 +282,10 @@
     if (videoPlayer) {
       videoPlayer.src = '';
     }
+    if (previewVideo) {
+      previewVideo.src = '';
+    }
+    window.removeEventListener('pointerup', handleWindowPointerUp);
   });
 
   const handleCanPlay = async (video: HTMLVideoElement) => {
@@ -331,6 +339,96 @@
   // The time is only refreshed on HLS fragment decode by default,
   // so manually emit events on seek to update it immediately.
   const onSeeking = (event: Event) => event.currentTarget?.dispatchEvent(new Event('timeupdate'));
+
+  // Video Scrubber / Hover Thumbnail Preview (YouTube Precise Seeking)
+  let controlsContainer: HTMLElement | undefined = $state();
+  let controlsWidth = $state(0);
+  let previewX = $state(0);
+  let previewTime = $state(0);
+  let isPreviewing = $state(false);
+  let isScrubbing = $state(false);
+  let previewVideo: HTMLVideoElement | undefined = $state();
+  let seekPending = false;
+  let queuedPreviewTime = 0;
+
+  const isPortrait = $derived(!!(asset.width && asset.height && asset.width < asset.height));
+  const previewCardWidth = $derived(isPortrait ? 112 : 192);
+  const previewCardHeight = $derived(isPortrait ? 192 : 108);
+
+  const clampedPreviewX = $derived.by(() => {
+    const half = previewCardWidth / 2;
+    const padding = 16;
+    if (!controlsWidth) return previewX;
+    return Math.max(half + padding, Math.min(controlsWidth - half - padding, previewX));
+  });
+
+  const formatTime = (seconds: number) => {
+    if (!isFinite(seconds) || seconds < 0) return '0:00';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) {
+      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const updatePreviewTime = (time: number) => {
+    queuedPreviewTime = time;
+    if (!previewVideo || seekPending) return;
+
+    seekPending = true;
+    requestAnimationFrame(() => {
+      if (previewVideo && isFinite(queuedPreviewTime)) {
+        try {
+          if ('fastSeek' in previewVideo && typeof (previewVideo as any).fastSeek === 'function') {
+            (previewVideo as any).fastSeek(queuedPreviewTime);
+          } else {
+            previewVideo.currentTime = queuedPreviewTime;
+          }
+        } catch {}
+      }
+      seekPending = false;
+    });
+  };
+
+  const handleTimeRangePointerMove = (e: PointerEvent) => {
+    if (!controlsContainer) return;
+    const containerRect = controlsContainer.getBoundingClientRect();
+    const timeRangeEl = e.currentTarget as HTMLElement;
+    const timeRangeRect = timeRangeEl.getBoundingClientRect();
+
+    const pct = Math.max(0, Math.min(1, (e.clientX - timeRangeRect.left) / timeRangeRect.width));
+    const duration = videoPlayer?.duration || (asset.duration ? asset.duration / 1000 : 0);
+
+    previewX = e.clientX - containerRect.left;
+    previewTime = pct * duration;
+    isPreviewing = true;
+    updatePreviewTime(previewTime);
+  };
+
+  const handleTimeRangePointerLeave = () => {
+    if (!isScrubbing) {
+      isPreviewing = false;
+    }
+  };
+
+  const handleTimeRangePointerDown = (e: PointerEvent) => {
+    isScrubbing = true;
+    handleTimeRangePointerMove(e);
+  };
+
+  const handleWindowPointerUp = () => {
+    if (isScrubbing) {
+      isScrubbing = false;
+      isPreviewing = false;
+    }
+  };
+
+  $effect(() => {
+    window.addEventListener('pointerup', handleWindowPointerUp);
+    return () => window.removeEventListener('pointerup', handleWindowPointerUp);
+  });
 </script>
 
 <svelte:body
@@ -338,6 +436,34 @@
     {
       shortcut: { key: ' ' },
       onShortcut: () => (videoPlayer?.paused ? videoPlayer?.play() : videoPlayer?.pause()),
+    },
+    {
+      shortcut: { key: 'k' },
+      onShortcut: () => (videoPlayer?.paused ? videoPlayer?.play() : videoPlayer?.pause()),
+    },
+    {
+      shortcut: { key: 'ArrowLeft' },
+      onShortcut: () =>
+        videoPlayer ? (videoPlayer.currentTime = Math.max(videoPlayer.currentTime - 5, 0)) : undefined,
+    },
+    {
+      shortcut: { key: 'ArrowRight' },
+      onShortcut: () =>
+        videoPlayer
+          ? (videoPlayer.currentTime = Math.min(videoPlayer.currentTime + 5, videoPlayer.duration))
+          : undefined,
+    },
+    {
+      shortcut: { key: 'j' },
+      onShortcut: () =>
+        videoPlayer ? (videoPlayer.currentTime = Math.max(videoPlayer.currentTime - 10, 0)) : undefined,
+    },
+    {
+      shortcut: { key: 'l' },
+      onShortcut: () =>
+        videoPlayer
+          ? (videoPlayer.currentTime = Math.min(videoPlayer.currentTime + 10, videoPlayer.duration))
+          : undefined,
     },
     {
       shortcut: { shift: true, key: 'ArrowLeft' },
@@ -457,15 +583,63 @@
           </media-settings-menu>
         {/if}
 
-        <div class="relative isolate flex h-32 w-full flex-col justify-end px-4">
+        <div
+          bind:this={controlsContainer}
+          bind:clientWidth={controlsWidth}
+          class="relative isolate flex h-32 w-full flex-col justify-end px-4"
+        >
           <div
             class="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-48 bg-black/80 mask-smoothstep-to-top"
           ></div>
+
+          <!-- YouTube-Style Hover/Scrub Video Preview Tooltip -->
+          {#if isPreviewing && assetFileUrl}
+            <div
+              class="pointer-events-none absolute bottom-11 z-30 flex flex-col items-center transition-all duration-75 ease-out select-none"
+              style:left="{clampedPreviewX}px"
+              style:transform="translateX(-50%)"
+            >
+              <!-- Video Frame Preview Card -->
+              <div
+                class="relative overflow-hidden rounded-xl border-2 border-white/30 bg-black/95 shadow-2xl shadow-black/90 flex items-center justify-center backdrop-blur-md ring-1 ring-black/50"
+                style:width="{previewCardWidth}px"
+                style:height="{previewCardHeight}px"
+              >
+                <video
+                  bind:this={previewVideo}
+                  src={assetFileUrl}
+                  muted
+                  playsinline
+                  preload="auto"
+                  class="h-full w-full object-contain pointer-events-none"
+                  tabindex="-1"
+                  aria-hidden="true"
+                ></video>
+              </div>
+
+              <!-- Timestamp Bubble (e.g. 46:06) -->
+              <div
+                class="mt-1.5 rounded-full bg-black/90 px-3 py-0.5 text-xs font-semibold text-white shadow-xl border border-white/15 tracking-wider font-mono tabular-nums"
+              >
+                {formatTime(previewTime)}
+              </div>
+            </div>
+          {/if}
+
           <media-control-bar part="bottom" class="flex h-10 w-full gap-2">
+            <media-seek-backward-button seekoffset="10" class="shrink-0 rounded-full p-2 outline-none">
+              <Icon slot="icon" icon={mdiRewind10} />
+            </media-seek-backward-button>
+
             <media-play-button class="shrink-0 rounded-full p-2 outline-none">
               <Icon slot="play" icon={mdiPlay} />
               <Icon slot="pause" icon={mdiPause} />
             </media-play-button>
+
+            <media-seek-forward-button seekoffset="10" class="shrink-0 rounded-full p-2 outline-none">
+              <Icon slot="icon" icon={mdiFastForward10} />
+            </media-seek-forward-button>
+
             <media-time-display showduration class="rounded-lg p-2 outline-none"></media-time-display>
 
             <span class="grow"></span>
@@ -490,7 +664,13 @@
               <media-settings-menu-button class="shrink-0 rounded-full p-2 outline-none"></media-settings-menu-button>
             {/if}
           </media-control-bar>
-          <immich-time-range class="h-8 w-full rounded-lg px-2 pb-3 outline-none"></immich-time-range>
+
+          <immich-time-range
+            class="h-8 w-full rounded-lg px-2 pb-3 outline-none"
+            onpointermove={handleTimeRangePointerMove}
+            onpointerleave={handleTimeRangePointerLeave}
+            onpointerdown={handleTimeRangePointerDown}
+          ></immich-time-range>
         </div>
       </media-controller>
 
