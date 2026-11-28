@@ -57,6 +57,44 @@
 > [!NOTE]
 > You can find the main documentation, including installation guides, at https://immich.app/.
 
+---
+
+## ⚡ Meet Bhingradiya's Enterprise Fork (`MeetBhingradiya/immich`)
+
+> **Architectural Enhancements, Zero-Knowledge Storage Encryption, Native Bare-Metal Windows Runtime & Mobile Streaming Optimization.**
+
+This repository is a specialized production fork of [immich-app/immich](https://github.com/immich-app/immich) engineered by **[Meet Bhingradiya](https://github.com/MeetBhingradiya)**. It introduces critical enterprise security features, true zero-knowledge media storage encryption, bare-metal Windows operation without Docker or WSL2 overhead, and optimized high-performance mobile video transcoding.
+
+---
+
+### 🌟 Key Differences & Enhancements (Compared to Upstream Immich)
+
+#### 1. 🔐 Zero-Knowledge Media Storage Encryption (`IMMC` AES-256-GCM)
+* **At-Rest Storage Encryption:** All media files stored in the physical library (`library/`) are encrypted on disk with authenticated AES-256-GCM chunked encryption with a custom `IMMC` binary header. Even host administrators or raw disk scrapers cannot view stored photos or videos in plaintext.
+* **SSO & Vault Key Escrow:** Seamless integration with production SSO vault (`/api/sso/vault`) for secure key derivation (PBKDF2/scrypt Key Encryption Keys - KEK) without storing unencrypted master keys on the local host.
+* **On-the-Fly Random-Access Streaming (HTTP 206 Partial Content):** Transparent Node.js chunk-level seek pipeline (`DecryptedRangeStream`) supporting byte ranges (`Range: bytes=start-end`) directly against encrypted `IMMC` ciphertext without full-file decryption.
+* **Transient Transcoding Pipeline:** Background FFmpeg jobs transiently decrypt encrypted sources into secure ephemeral scratch buffers and immediately wipe plaintext temporary files upon completion.
+
+#### 2. 🪟 Native Bare-Metal Windows Execution (Zero-Docker / Zero-WSL2)
+* **Zero Containerization Overhead:** Operates 100% natively on bare-metal Windows Server / Desktop using Bun workspaces (`bun.exe`), native PostgreSQL 14 (with `pgvector`), native Redis, and native FFmpeg binaries.
+* **Native Supervisor Daemon (`start-immich-native.js`):** Self-healing orchestrator managing PostgreSQL, Redis server, native Python ML processes, and Immich microservices with automated crash recovery and PID cleanup.
+* **Windows File System & Path Hardening:** Native path normalization, fcntl/POSIX fallback shims, and robust process signal handling tailored for Windows file systems.
+
+#### 3. 🎬 Mobile Video Transcoding & Playback Optimization
+* **Automated Downscaling & Codec Normalization:** Automatic downscaling of heavy 4K (3840×2160) and 1440p videos down to universally compatible 1080p/720p H.264 profiles.
+* **Codec Incompatibility Fixes:** Solves Flutter/Android in-app `MediaPlayer` black screen stalls by transcoding heavy mobile formats (AV1, HEVC/H.265 50–60 Mbps iPhone recordings, ProRes `.mov`, and `.mkv` containers) into native H.264 AAC MP4.
+* **Instant Start (`+faststart`):** Embeds MP4 `moov` atoms at byte 0 for instantaneous seek and stutter-free mobile streaming.
+
+#### 4. 🧠 Native Bare-Metal Machine Learning Engine
+* **Non-Docker ML Pipeline:** Completely decoupled from Docker container stacks; utilizes a dedicated native Python 3.12 virtual environment (`stack/ml-venv`) with ONNX Runtime, OpenCV, PyTorch, and InsightFace.
+* **Memory Trimmer & Process Optimization:** Intelligent memory trimming and lifecycle management to prevent RAM bloat on desktop host systems while retaining full Smart Search (CLIP), Facial Recognition, and Duplicate Detection capabilities.
+
+#### 5. 🛡️ Privacy, Security & Telemetry Cutoff
+* **Zero Telemetry:** Complete network isolation of telemetry and diagnostic phone-home routines.
+* **Loopback & Proxy Hardening:** Configured for internal LAN and encrypted mesh networks with explicit bypass for local endpoints.
+
+---
+
 ## Links
 
 - [Documentation](https://docs.immich.app/)
